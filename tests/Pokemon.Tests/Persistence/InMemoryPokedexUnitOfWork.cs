@@ -1,61 +1,62 @@
-using Pokemon.Infrastructure.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
-using Pokemon.Domain.Pokedex;
+using Pokemon.Infrastructure.Pokedex;
 namespace Pokemon.Tests.Persistence;
 
-/// <summary>
-/// Adaptador de un único proceso. Serializa operaciones para proteger relaciones y unicidad.
-/// Trabaja en una copia y solo la publica al terminar; una excepción revierte todo el comando.
-/// No persiste entre reinicios ni sirve como almacenamiento compartido entre réplicas.
-/// </summary>
-public sealed class InMemoryPokedexUnitOfWork : IPokedexUnitOfWork, IDisposable
+/// <summary>Doble transaccional exclusivamente de pruebas. Nunca forma parte del ensamblado desplegado.</summary>
+public sealed class InMemoryPokedexUnitOfWork : IPokedexReadSession, IPokedexUnitOfWork, IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private Snapshot state = new();
-
     public InMemoryPokedexUnitOfWork(bool seed = true)
     {
-        if (seed) PokedexSeed.Populate(state);
+        if (seed) PokedexSeed.PopulateAsync(state, default).GetAwaiter().GetResult();
     }
-
-    public async Task<T> Read<T>(Func<IPokedexReader, T> query, CancellationToken token)
+    public async Task<T> ReadAsync<T>(Func<IPokedexReader, Task<T>> query, CancellationToken token)
     {
         await gate.WaitAsync(token);
-        try { token.ThrowIfCancellationRequested(); return query(state.Copy()); }
-        finally { gate.Release(); }
+        var snapshot = state.Copy();
+        try { token.ThrowIfCancellationRequested(); return await query(snapshot); }
+        finally { snapshot.Close(); gate.Release(); }
     }
-
-    public async Task<T> Write<T>(Func<IPokedexSession, T> command, CancellationToken token)
+    public async Task<T> WriteAsync<T>(Func<IPokedexSession, Task<T>> command, CancellationToken token)
     {
         await gate.WaitAsync(token);
+        var snapshot = state.Copy();
         try
         {
             token.ThrowIfCancellationRequested();
-            var transaction = state.Copy();
-            var result = command(transaction);
+            var result = await command(snapshot);
             token.ThrowIfCancellationRequested();
-            // Otra copia impide que un callback retenido pueda mutar el estado publicado.
-            state = transaction.Copy();
+            state = snapshot.Copy();
             return result;
         }
-        finally { gate.Release(); }
+        finally { snapshot.Close(); gate.Release(); }
     }
     public void Dispose() => gate.Dispose();
-
     private sealed class Snapshot : IPokedexSession
     {
-        public ISpeciesRepository SpeciesRepository { get; } = new InMemorySpeciesRepository();
-        public IMoveRepository MoveRepository { get; } = new InMemoryMoveRepository();
-        public IOwnedPokemonRepository PokemonRepository { get; } = new InMemoryOwnedPokemonRepository();
-        public IReadOnlyCollection<Species> Species => SpeciesRepository.List();
-        public IReadOnlyCollection<CatalogMove> Moves => MoveRepository.List();
-        public IReadOnlyCollection<OwnedPokemon> Pokemon => PokemonRepository.List();
+        private bool closed;
+        private readonly InMemoryMoveRepository moves;
+        private readonly InMemorySpeciesRepository species;
+        private readonly InMemoryOwnedPokemonRepository pokemon;
+        public Snapshot()
+        {
+            moves = new(Ensure); species = new(Ensure); pokemon = new(Ensure);
+        }
+        private void Ensure() => ObjectDisposedException.ThrowIf(closed, this);
+        public void Close() => closed = true;
+        public ISpeciesRepository SpeciesRepository => species;
+        public IMoveRepository MoveRepository => moves;
+        public IOwnedPokemonRepository PokemonRepository => pokemon;
+        public ISpeciesReader Species => species;
+        public IMoveReader Moves => moves;
+        public IOwnedPokemonReader Pokemon => pokemon;
         public Snapshot Copy()
         {
             var copy = new Snapshot();
-            foreach (var value in Species) copy.SpeciesRepository.Save(value);
-            foreach (var value in Moves) copy.MoveRepository.Save(value);
-            foreach (var value in Pokemon) copy.PokemonRepository.Save(value);
+            foreach (var (id, value) in moves.Entries) copy.moves.Entries.Add(id, value);
+            foreach (var (id, value) in species.Entries) copy.species.Entries.Add(id, value);
+            foreach (var (id, value) in pokemon.Entries) copy.pokemon.Entries.Add(id, value);
             return copy;
         }
     }

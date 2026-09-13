@@ -1,3 +1,4 @@
+using Pokemon.Application.Common.Behaviors;
 using Npgsql;
 using MediatR;
 using OpenTelemetry.Logs;
@@ -13,7 +14,6 @@ public static class ObservabilityExtensions
     public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
     {
         var export = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
-        builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestTelemetryBehavior<,>));
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService(builder.Configuration["OTEL_SERVICE_NAME"] ?? "pokemon-api"))
             .WithTracing(tracing =>

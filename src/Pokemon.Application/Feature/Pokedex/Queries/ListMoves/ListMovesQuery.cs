@@ -1,14 +1,17 @@
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Queries.ListMoves;
 
-/// <summary>Consulta ListMoves: proyecta una lectura coherente sin modificar el estado.</summary>
-public sealed record ListMovesQuery() : IRequest<IReadOnlyList<MoveView>>;
+public sealed record ListMovesQuery(int Offset = 0, int Limit = 100) : IQuery<IReadOnlyList<MoveView>>;
 
-public sealed class ListMovesQueryHandler(IPokedexUnitOfWork store) : IRequestHandler<ListMovesQuery, IReadOnlyList<MoveView>>
+/// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
+public sealed class ListMovesQueryHandler(IPokedexReadSession reader) : IRequestHandler<ListMovesQuery, IReadOnlyList<MoveView>>
 {
     public Task<IReadOnlyList<MoveView>> Handle(ListMovesQuery request, CancellationToken token) =>
-        store.Read<IReadOnlyList<MoveView>>(data => data.Moves.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ThenBy(e => e.Id).Select(e => PokedexMapping.View(e)).ToArray(), token);
-
+        reader.ReadAsync<IReadOnlyList<MoveView>>(async data =>
+        {
+            return (await data.Moves.ListAsync(new CatalogPage(request.Offset, request.Limit), token)).Select(PokedexMapping.View).ToArray();
+        }, token);
 }

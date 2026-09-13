@@ -1,18 +1,20 @@
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
+using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Commands.CreateSpecies;
 
-/// <summary>Creación de Species: aplica reglas y guarda el cambio de forma atómica.</summary>
-public sealed record CreateSpeciesCommand(SpeciesInput Data) : IRequest<SpeciesView>;
+public sealed record CreateSpeciesCommand(SpeciesInput Data) : ICommand<SpeciesView>;
 
-public sealed class CreateSpeciesCommandHandler(IPokedexUnitOfWork store) : IRequestHandler<CreateSpeciesCommand, SpeciesView>
+/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+public sealed class CreateSpeciesCommandHandler(IPokedexUnitOfWork transactions) : IRequestHandler<CreateSpeciesCommand, SpeciesView>
 {
     public Task<SpeciesView> Handle(CreateSpeciesCommand request, CancellationToken token) =>
-        store.Write(data =>
+        transactions.WriteAsync(async data =>
         {
-            var entity = PokedexChanges.Species(data, Guid.NewGuid(), request.Data);
-            data.SpeciesRepository.Save(entity);
-            return PokedexMapping.View(data, entity);
+            var entity = await PokedexChanges.SpeciesAsync(data, Guid.NewGuid(), request.Data, token);
+            await data.SpeciesRepository.SaveAsync(entity, token);
+            return await PokedexMapping.ViewAsync(data, entity, token);
         }, token);
 }

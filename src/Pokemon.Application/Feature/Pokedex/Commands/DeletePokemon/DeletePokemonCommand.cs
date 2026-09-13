@@ -1,18 +1,20 @@
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
+using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Commands.DeletePokemon;
 
-/// <summary>Eliminación de Pokemon: aplica reglas y guarda el cambio de forma atómica.</summary>
-public sealed record DeletePokemonCommand(Guid Id) : IRequest<Unit>;
+public sealed record DeletePokemonCommand(Guid Id) : ICommand<Unit>;
 
-public sealed class DeletePokemonCommandHandler(IPokedexUnitOfWork store) : IRequestHandler<DeletePokemonCommand, Unit>
+/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+public sealed class DeletePokemonCommandHandler(IPokedexUnitOfWork transactions) : IRequestHandler<DeletePokemonCommand, Unit>
 {
     public Task<Unit> Handle(DeletePokemonCommand request, CancellationToken token) =>
-        store.Write(data =>
+        transactions.WriteAsync(async data =>
         {
-            PokedexMapping.Pokemon(data, request.Id);
-            data.PokemonRepository.Delete(request.Id);
+            await PokedexMapping.PokemonAsync(data, request.Id, token);
+            await data.PokemonRepository.DeleteAsync(request.Id, token);
             return Unit.Value;
         }, token);
 }

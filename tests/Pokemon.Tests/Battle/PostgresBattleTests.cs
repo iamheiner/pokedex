@@ -10,7 +10,10 @@ using NpgsqlTypes;
 using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Battle;
 using Pokemon.Application.Feature.Battle.Contracts;
-using Pokemon.Infrastructure.Battle.Postgres;
+using Pokemon.Infrastructure.Persistence;
+using Pokemon.Infrastructure.Persistence.Repositories;
+using Pokemon.Infrastructure.Persistence.Migrations;
+using Pokemon.Infrastructure.Persistence.Serialization;
 namespace Pokemon.Tests.Battle;
 
 /// <summary>Suite explícita contra PostgreSQL real; cada caso crea y elimina su propio esquema aislado.</summary>
@@ -22,8 +25,8 @@ public sealed class PostgresBattleTests
     {
         await using var db = await TestDatabase.Create(migrate: false);
         await using var second = NpgsqlDataSource.Create(db.ConnectionString);
-        await Task.WhenAll(new BattleDatabaseMigrator(db.Source).Migrate(default), new BattleDatabaseMigrator(second).Migrate(default));
-        await new BattleDatabaseMigrator(db.Source).Migrate(default);
+        await Task.WhenAll(new BattleDatabaseMigrator(new DatabaseConnectionFactory(db.Source)).Migrate(default), new BattleDatabaseMigrator(new DatabaseConnectionFactory(second)).Migrate(default));
+        await new BattleDatabaseMigrator(new DatabaseConnectionFactory(db.Source)).Migrate(default);
         await using var command = db.Source.CreateCommand("SELECT count(*) FROM battle_schema_migrations WHERE version = 1");
         Assert.Equal(1L, await command.ExecuteScalarAsync());
         await using var constraint = db.Source.CreateCommand("SELECT count(*) FROM pg_constraint WHERE conrelid = 'battles'::regclass");
@@ -36,9 +39,9 @@ public sealed class PostgresBattleTests
         await using var db = await TestDatabase.Create();
         var battle = BattleDomainTests.Duel(19, 19);
         for (var n = 0; n < 43; n++) battle = BattleDomainTests.Next(battle);
-        await new PostgresBattleRepository(db.Source).Add(battle, default);
+        await new BattleRepository(new DatabaseConnectionFactory(db.Source)).Add(battle, default);
         await using var reopened = NpgsqlDataSource.Create(db.ConnectionString);
-        var store = new PostgresBattleRepository(reopened);
+        var store = new BattleRepository(new DatabaseConnectionFactory(reopened));
         var restored = await store.Get(battle.Id, default);
         Assert.Equal(JsonSerializer.Serialize(battle), JsonSerializer.Serialize(restored));
         var next = await store.Update(battle.Id, BattleDomainTests.Next, default);
@@ -52,7 +55,7 @@ public sealed class PostgresBattleTests
     {
         await using var db = await TestDatabase.Create();
         await using var otherSource = NpgsqlDataSource.Create(db.ConnectionString);
-        var stores = new[] { new PostgresBattleRepository(db.Source), new PostgresBattleRepository(otherSource) };
+        var stores = new[] { new BattleRepository(new DatabaseConnectionFactory(db.Source)), new BattleRepository(new DatabaseConnectionFactory(otherSource)) };
         var battle = BattleDomainTests.Duel(); await stores[0].Add(battle, default);
         var draws = 0;
         var attempts = Enumerable.Range(0, 12).Select(async index =>
@@ -77,7 +80,7 @@ public sealed class PostgresBattleTests
     [PostgresFact]
     public async Task ExceptionAndCancellationRollBackWithoutChangingTheRow()
     {
-        await using var db = await TestDatabase.Create(); var store = new PostgresBattleRepository(db.Source);
+        await using var db = await TestDatabase.Create(); var store = new BattleRepository(new DatabaseConnectionFactory(db.Source));
         var battle = BattleDomainTests.Duel(); await store.Add(battle, default);
         await Assert.ThrowsAsync<InvalidOperationException>(() => store.Update(battle.Id, _ => throw new InvalidOperationException(), default));
         using var cancellation = new CancellationTokenSource();
@@ -92,7 +95,7 @@ public sealed class PostgresBattleTests
     [PostgresFact]
     public async Task LockingOneBattleDoesNotBlockAnotherAndCancelledWaitLeavesNoTurn()
     {
-        await using var db = await TestDatabase.Create(); var store = new PostgresBattleRepository(db.Source);
+        await using var db = await TestDatabase.Create(); var store = new BattleRepository(new DatabaseConnectionFactory(db.Source));
         var first = BattleDomainTests.Duel(); var second = BattleDomainTests.Duel();
         await store.Add(first, default); await store.Add(second, default);
         await using var connection = await db.Source.OpenConnectionAsync();
@@ -110,7 +113,7 @@ public sealed class PostgresBattleTests
     [PostgresFact]
     public async Task CorruptDocumentsAndNullVersionsAreRejected()
     {
-        await using var db = await TestDatabase.Create(); var store = new PostgresBattleRepository(db.Source);
+        await using var db = await TestDatabase.Create(); var store = new BattleRepository(new DatabaseConnectionFactory(db.Source));
         var battle = BattleDomainTests.Next(BattleDomainTests.Duel()); await store.Add(battle, default);
         await using var invalid = db.Source.CreateCommand("UPDATE battles SET document = jsonb_set(document, '{version}', 'null') WHERE id = $1");
         invalid.Parameters.AddWithValue(battle.Id);
@@ -124,12 +127,12 @@ public sealed class PostgresBattleTests
     [PostgresFact]
     public async Task FinishedBattleSurvivesReconnectionAndStillRejectsActions()
     {
-        await using var db = await TestDatabase.Create(); var store = new PostgresBattleRepository(db.Source);
+        await using var db = await TestDatabase.Create(); var store = new BattleRepository(new DatabaseConnectionFactory(db.Source));
         var battle = BattleDomainTests.Duel(1, 1);
         while (battle.Phase != BattlePhase.Finished) battle = BattleDomainTests.Next(battle);
         await store.Add(battle, default);
         await using var reopened = NpgsqlDataSource.Create(db.ConnectionString);
-        var restored = await new PostgresBattleRepository(reopened).Get(battle.Id, default);
+        var restored = await new BattleRepository(new DatabaseConnectionFactory(reopened)).Get(battle.Id, default);
         Assert.True(restored.IsDraw); Assert.Equal(BattlePhase.Finished, restored.Phase);
         await Assert.ThrowsAsync<BattleConflictException>(() => store.Update(battle.Id,
             b => b.PlayTurn(b.First.Snapshot.Id, null, b.Version, 100), default));
@@ -208,7 +211,7 @@ internal sealed class TestDatabase : IAsyncDisposable
         var database = new TestDatabase(admin, settings.ConnectionString, schema);
         try
         {
-            if (migrate) await new BattleDatabaseMigrator(database.Source).Migrate(default);
+            if (migrate) await new BattleDatabaseMigrator(new DatabaseConnectionFactory(database.Source)).Migrate(default);
             return database;
         }
         catch { await database.DisposeAsync(); throw; }

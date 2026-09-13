@@ -1,11 +1,12 @@
+using Pokemon.Infrastructure.Persistence;
+using Pokemon.Infrastructure.Persistence.Repositories;
+using Pokemon.Infrastructure.Persistence.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pokemon.Domain.Pokedex.Repositories;
 using Npgsql;
 using Pokemon.Domain.Battle.Repositories;
-using Pokemon.Infrastructure.Pokedex.Postgres;
-using Pokemon.Infrastructure.Battle.Postgres;
 namespace Pokemon.Infrastructure;
 
 /// <summary>Composición del adaptador. PostgreSQL es el único almacenamiento de la aplicación.</summary>
@@ -18,12 +19,16 @@ public static class DependencyInjection
         if (string.IsNullOrWhiteSpace(connection))
             throw new InvalidOperationException("ConnectionStrings:Battles is required for PostgreSQL. Use Docker Compose or configure the connection explicitly.");
         services.AddSingleton(_ => NpgsqlDataSource.Create(connection));
-        services.AddSingleton<IBattleRepository, PostgresBattleRepository>();
-        services.AddSingleton<IPokedexUnitOfWork, PostgresPokedexUnitOfWork>();
+        services.AddSingleton<DatabaseConnectionFactory>();
+        services.AddSingleton<IBattleRepository, BattleRepository>();
+        services.AddSingleton<IBattleReader>(provider => provider.GetRequiredService<IBattleRepository>());
+        services.AddSingleton<PokedexSessionFactory>();
+        services.AddSingleton<IPokedexUnitOfWork>(provider => provider.GetRequiredService<PokedexSessionFactory>());
+        services.AddSingleton<IPokedexReadSession>(provider => provider.GetRequiredService<PokedexSessionFactory>());
         services.AddSingleton<PokedexDatabaseMigrator>();
         services.AddSingleton<BattleDatabaseMigrator>();
         services.AddHostedService<PersistenceMigrationService>();
-        services.AddHealthChecks().AddCheck<BattleDatabaseHealthCheck>("postgres-battles");
+        services.AddHealthChecks().AddCheck<PersistenceHealthCheck>("persistence");
     }
 }
 

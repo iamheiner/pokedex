@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using Pokemon.Domain;
 using Pokemon.Domain.Battle;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
-namespace Pokemon.Infrastructure.Battle.Postgres;
+namespace Pokemon.Infrastructure.Persistence.Serialization;
 
 /// <summary>
 /// Formato durable v1: instantáneas iniciales y acciones resueltas con su azar ya fijado.

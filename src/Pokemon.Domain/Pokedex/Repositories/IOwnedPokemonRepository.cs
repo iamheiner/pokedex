@@ -1,10 +1,8 @@
 namespace Pokemon.Domain.Pokedex.Repositories;
 
-/// <summary>Repositorio de OwnedPokemon dentro de una unidad de trabajo; no confirma cambios por sí solo.</summary>
-public interface IOwnedPokemonRepository
+/// <summary>Persistencia del agregado OwnedPokemon dentro de una unidad de trabajo.</summary>
+public interface IOwnedPokemonRepository : IOwnedPokemonReader
 {
-    IReadOnlyCollection<OwnedPokemon> List();
-    OwnedPokemon? Find(Guid id);
-    void Save(OwnedPokemon aggregate);
-    void Delete(Guid id);
+    Task SaveAsync(OwnedPokemon aggregate, CancellationToken token);
+    Task DeleteAsync(Guid id, CancellationToken token);
 }

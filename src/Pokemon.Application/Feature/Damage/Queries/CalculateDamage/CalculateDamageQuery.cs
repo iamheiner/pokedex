@@ -1,3 +1,4 @@
+using Pokemon.Application.Common.Messaging;
 using MediatR;
 using Pokemon.Domain;
 
@@ -16,4 +17,4 @@ namespace Pokemon.Application.Feature.Damage.Queries.CalculateDamage;
 /// MediatR la enviará al handler registrado para este tipo de Query.
 /// </remarks>
 public sealed record CalculateDamageQuery(Combatant Attacker, string MoveName, Combatant Defender)
-    : IRequest<DamageResult>;
+    : IQuery<DamageResult>;

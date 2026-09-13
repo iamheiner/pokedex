@@ -1,3 +1,5 @@
+using MediatR;
+using Pokemon.Application.Common.Behaviors;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Pokemon.Application;
@@ -11,6 +13,7 @@ public static class DependencyInjection
         // funcionalidades se registrarán sin añadirlos individualmente a Program.cs.
         services.AddMediatR(configuration =>
             configuration.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestTelemetryBehavior<,>));
         return services;
     }
 }

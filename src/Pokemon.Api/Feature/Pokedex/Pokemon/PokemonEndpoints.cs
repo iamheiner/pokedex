@@ -16,8 +16,8 @@ public static class PokemonEndpoints
     {
         var group = endpoints.MapGroup("/pokemon").WithTags("Pokedex - Pokemon")
             .ProducesProblem(400).ProducesProblem(404).ProducesProblem(409).ProducesProblem(415).ProducesProblem(500);
-        group.MapGet("/", async (ISender sender, CancellationToken token) =>
-            Results.Ok(await sender.Send(new ListPokemonQuery(), token)))
+        group.MapGet("/", async (ISender sender, CancellationToken token, int? offset, int? limit) =>
+            Results.Ok(await sender.Send(new ListPokemonQuery(offset ?? 0, limit ?? 100), token)))
             .Produces<IReadOnlyList<PokemonView>>().WithSummary("Lista ejemplares");
         group.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken token) =>
             Results.Ok(await sender.Send(new GetPokemonQuery(id), token)))

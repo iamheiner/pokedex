@@ -107,7 +107,10 @@ public sealed class PokedexHttpTests
     }
 
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(3)] [InlineData(5)]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
     public async Task OwnedPokemonRequiresExactlyFourMoves(int count)
     {
         using var factory = new ApiFactory(); using var client = factory.CreateClient();
@@ -116,9 +119,14 @@ public sealed class PokedexHttpTests
     }
 
     [Theory]
-    [InlineData("duplicate")] [InlineData("unlearnable")] [InlineData("future")]
-    [InlineData("unknown-species")] [InlineData("unknown-move")] [InlineData("level")]
-    [InlineData("health")] [InlineData("null-moves")]
+    [InlineData("duplicate")]
+    [InlineData("unlearnable")]
+    [InlineData("future")]
+    [InlineData("unknown-species")]
+    [InlineData("unknown-move")]
+    [InlineData("level")]
+    [InlineData("health")]
+    [InlineData("null-moves")]
     public async Task InvalidLearningAndHealthDoNotChangeExistingPokemon(string fault)
     {
         using var factory = new ApiFactory(); using var client = factory.CreateClient();
@@ -225,7 +233,7 @@ public sealed class PokedexHttpTests
     {
         using var factory = new ApiFactory(); using var client = factory.CreateClient();
         var original = (await client.GetFromJsonAsync<SpeciesView>($"/species/{Id(101)}", Json))!;
-        var input = new SpeciesInput(original.Name, original.Type, original.Stats with { Attack = 100 },
+        var input = new SpeciesInput(original.Name, original.Type, new StatsInput(original.Stats.Health, 100, original.Stats.Defense, original.Stats.SpecialAttack, original.Stats.SpecialDefense, original.Stats.Speed),
             original.Learnset.Select(e => new LearningInput(e.Move.Id, e.Level)).ToArray());
         Assert.Equal(HttpStatusCode.OK, (await Send(client, HttpMethod.Put, $"/species/{Id(101)}", input)).StatusCode);
         var pokemon = (await client.GetFromJsonAsync<PokemonView>($"/pokemon/{Id(201)}", Json))!;
@@ -240,8 +248,17 @@ public sealed class PokedexHttpTests
         var defender = (await client.GetFromJsonAsync<PokemonView>($"/pokemon/{Id(201)}", Json))!;
         static object Snapshot(PokemonView p) => new
         {
-            p.Id, p.Name, p.Level, p.Type, p.CurrentHealth, p.TotalHealth, p.Stats.Attack, p.Stats.Defense,
-            p.Stats.SpecialAttack, p.Stats.SpecialDefense, p.Stats.Speed,
+            p.Id,
+            p.Name,
+            p.Level,
+            p.Type,
+            p.CurrentHealth,
+            p.TotalHealth,
+            p.Stats.Attack,
+            p.Stats.Defense,
+            p.Stats.SpecialAttack,
+            p.Stats.SpecialDefense,
+            p.Stats.Speed,
             Moves = p.Moves.Select(m => new { m.Name, m.Power, m.Type })
         };
         var result = await Send(client, HttpMethod.Post, "/damage", new { Attacker = Snapshot(attacker), Defender = Snapshot(defender), MoveName = "Water Gun" });
@@ -275,4 +292,26 @@ public sealed class PokedexHttpTests
         }
     }
 
+    [Theory]
+    [InlineData("moves")]
+    [InlineData("species")]
+    [InlineData("pokemon")]
+    [InlineData("moves/00000000-0000-0000-0000-000000000001/pokemon")]
+    [InlineData("moves/00000000-0000-0000-0000-000000000001/species")]
+    public async Task Lists_have_stable_pages_and_validate_bounds(string resource)
+    {
+        using var factory = new ApiFactory();
+        using var client = factory.CreateClient();
+        var first = (await client.GetFromJsonAsync<JsonArray>($"/{resource}?offset=0&limit=1"))!;
+        var second = (await client.GetFromJsonAsync<JsonArray>($"/{resource}?offset=1&limit=1"))!;
+        var both = (await client.GetFromJsonAsync<JsonArray>($"/{resource}?offset=0&limit=2"))!;
+        Assert.Single(first);
+        Assert.Single(second);
+        Assert.Equal(first[0]!.ToJsonString(), both[0]!.ToJsonString());
+        Assert.Equal(second[0]!.ToJsonString(), both[1]!.ToJsonString());
+        Assert.NotEqual(first[0]!["id"]!.ToString(), second[0]!["id"]!.ToString());
+        Assert.Empty((await client.GetFromJsonAsync<JsonArray>($"/{resource}?offset=1000&limit=1"))!);
+        foreach (var parameters in new[] { "offset=-1", "limit=0", "limit=101" })
+            await Problem(await client.GetAsync($"/{resource}?{parameters}"), HttpStatusCode.BadRequest);
+    }
 }

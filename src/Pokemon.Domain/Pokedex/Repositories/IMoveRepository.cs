@@ -1,10 +1,8 @@
 namespace Pokemon.Domain.Pokedex.Repositories;
 
-/// <summary>Repositorio de CatalogMove dentro de una unidad de trabajo; no confirma cambios por sí solo.</summary>
-public interface IMoveRepository
+/// <summary>Persistencia del agregado CatalogMove dentro de una unidad de trabajo.</summary>
+public interface IMoveRepository : IMoveReader
 {
-    IReadOnlyCollection<CatalogMove> List();
-    CatalogMove? Find(Guid id);
-    void Save(CatalogMove aggregate);
-    void Delete(Guid id);
+    Task SaveAsync(CatalogMove aggregate, CancellationToken token);
+    Task DeleteAsync(Guid id, CancellationToken token);
 }

@@ -96,6 +96,11 @@
         "resolved": "2.17.3",
         "contentHash": "TwAf1zy/MH2famozcDqk9+/jD37VAbonRXfnjAso0Q2YKeWtA0kH59WxhuevvAxWDL3jUU3TDpNmUFS2gF9bHw=="
       },
+      "Dapper": {
+        "type": "Transitive",
+        "resolved": "2.1.79",
+        "contentHash": "8YijbzgTfmqmQOnVNorYM6K++pxqnW3nJ4aC1sRHzxUA2CcuoJ9gsTem3kgBnPRMc38zZHl4Esb6hAezXIEEuw=="
+      },
       "MediatR": {
         "type": "Transitive",
         "resolved": "12.5.0",
@@ -203,6 +208,7 @@
       "pokemon.infrastructure": {
         "type": "Project",
         "dependencies": {
+          "Dapper": "[2.1.79, )",
           "Npgsql": "[10.0.3, )",
           "Pokemon.Domain": "[1.0.0, )"
         }

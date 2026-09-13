@@ -8,15 +8,16 @@ namespace Pokemon.Application.Feature.Battle;
 internal static class BattleMapping
 {
     /// <summary>Captura todos los datos dentro de una misma lectura coherente de la Pokédex.</summary>
-    public static BattlePokemon Snapshot(IPokedexReader data, Guid id)
+    public static async Task<BattlePokemon> SnapshotAsync(IPokedexReader data, Guid id, CancellationToken token)
     {
-        var owned = data.Pokemon.SingleOrDefault(p => p.Id == id)
+        var owned = await data.Pokemon.FindAsync(id, token)
             ?? throw new BattleNotFoundException("Referenced Pokemon was not found.");
-        var species = data.Species.Single(s => s.Id == owned.SpeciesId);
+        var species = await data.Species.FindAsync(owned.SpeciesId, token) ?? throw new InvalidDataException("Pokemon species is missing.");
         var stats = species.Stats;
+        var catalogMoves = (await data.Moves.FindManyAsync(owned.MoveIds, token)).ToDictionary(move => move.Id);
         var moves = owned.MoveIds.Select(moveId =>
         {
-            var catalog = data.Moves.Single(m => m.Id == moveId);
+            var catalog = catalogMoves[moveId];
             return new BattleMove(catalog.Id, catalog.ToDamageMove());
         }).ToArray();
         var pokemon = new Combatant(id: owned.Id, name: owned.Name, level: owned.Level, type: species.Type,

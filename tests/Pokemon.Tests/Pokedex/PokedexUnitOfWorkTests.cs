@@ -18,20 +18,20 @@ public sealed class PokedexUnitOfWorkTests
         var species = new Species(Guid.NewGuid(), "Species", PokemonType.Normal,
             new BaseStats(40, 40, 40, 40, 40, 40), moves.Select(move => new LearnableMove(move.Id, 1)));
         var pokemon = new OwnedPokemon(Guid.NewGuid(), species, "Pokemon", 20, 40, 40, moves.Select(move => move.Id));
-        async Task Execute() => await unitOfWork.Write(session =>
+        async Task Execute() => await unitOfWork.WriteAsync(async session =>
         {
-            foreach (var move in moves) session.MoveRepository.Save(move);
-            session.SpeciesRepository.Save(species);
-            session.PokemonRepository.Save(pokemon);
-            Assert.Same(species, session.SpeciesRepository.Find(species.Id));
-            Assert.Same(pokemon, session.PokemonRepository.Find(pokemon.Id));
-            Assert.Same(moves[0], session.MoveRepository.Find(moves[0].Id));
+            foreach (var move in moves) await session.MoveRepository.SaveAsync(move, default);
+            await session.SpeciesRepository.SaveAsync(species, default);
+            await session.PokemonRepository.SaveAsync(pokemon, default);
+            Assert.Same(species, (await session.SpeciesRepository.FindAsync(species.Id, default)));
+            Assert.Same(pokemon, (await session.PokemonRepository.FindAsync(pokemon.Id, default)));
+            Assert.Same(moves[0], (await session.MoveRepository.FindAsync(moves[0].Id, default)));
             if (fail) throw new InvalidOperationException("Abort all repositories");
             return true;
         }, default);
         if (fail) await Assert.ThrowsAsync<InvalidOperationException>(Execute);
         else await Execute();
-        var counts = await unitOfWork.Read(reader => (reader.Moves.Count, reader.Species.Count, reader.Pokemon.Count), default);
+        var counts = await unitOfWork.ReadAsync(async reader => ((await reader.Moves.ListAsync(new(), default)).Count, (await reader.Species.ListAsync(new(), default)).Count, (await reader.Pokemon.ListAsync(new(), default)).Count), default);
         Assert.Equal(fail ? (0, 0, 0) : (4, 1, 1), counts);
     }
 }

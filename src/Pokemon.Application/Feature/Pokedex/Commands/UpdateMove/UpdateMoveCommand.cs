@@ -1,19 +1,21 @@
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
+using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Commands.UpdateMove;
 
-/// <summary>Actualización de Move: aplica reglas y guarda el cambio de forma atómica.</summary>
-public sealed record UpdateMoveCommand(Guid Id, MoveInput Data) : IRequest<MoveView>;
+public sealed record UpdateMoveCommand(Guid Id, MoveInput Data) : ICommand<MoveView>;
 
-public sealed class UpdateMoveCommandHandler(IPokedexUnitOfWork store) : IRequestHandler<UpdateMoveCommand, MoveView>
+/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+public sealed class UpdateMoveCommandHandler(IPokedexUnitOfWork transactions) : IRequestHandler<UpdateMoveCommand, MoveView>
 {
     public Task<MoveView> Handle(UpdateMoveCommand request, CancellationToken token) =>
-        store.Write(data =>
+        transactions.WriteAsync(async data =>
         {
-            PokedexMapping.Move(data, request.Id);
-            var entity = PokedexChanges.Move(data, request.Id, request.Data);
-            data.MoveRepository.Save(entity);
+            await PokedexMapping.MoveAsync(data, request.Id, token);
+            var entity = await PokedexChanges.MoveAsync(data, request.Id, request.Data, token);
+            await data.MoveRepository.SaveAsync(entity, token);
             return PokedexMapping.View(entity);
         }, token);
 }

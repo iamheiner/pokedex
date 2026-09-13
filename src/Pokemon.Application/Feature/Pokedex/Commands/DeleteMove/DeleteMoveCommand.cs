@@ -1,21 +1,22 @@
-using Pokemon.Domain.Pokedex;
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
+using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Commands.DeleteMove;
 
-/// <summary>Eliminación de Move: aplica reglas y guarda el cambio de forma atómica.</summary>
-public sealed record DeleteMoveCommand(Guid Id) : IRequest<Unit>;
+public sealed record DeleteMoveCommand(Guid Id) : ICommand<Unit>;
 
-public sealed class DeleteMoveCommandHandler(IPokedexUnitOfWork store) : IRequestHandler<DeleteMoveCommand, Unit>
+/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+public sealed class DeleteMoveCommandHandler(IPokedexUnitOfWork transactions) : IRequestHandler<DeleteMoveCommand, Unit>
 {
     public Task<Unit> Handle(DeleteMoveCommand request, CancellationToken token) =>
-        store.Write(data =>
+        transactions.WriteAsync(async data =>
         {
-            PokedexMapping.Move(data, request.Id);
-            if (data.Species.Any(s => s.Learnset.Any(e => e.MoveId == request.Id)))
-                throw new PokedexConflictException("Move is referenced by a species learnset.");
-            data.MoveRepository.Delete(request.Id);
+            await PokedexMapping.MoveAsync(data, request.Id, token);
+            if (await data.Species.ReferencesMoveAsync(request.Id, token) || await data.Pokemon.ReferencesMoveAsync(request.Id, token))
+                throw new PokedexConflictException("Move is referenced by a species or Pokemon.");
+            await data.MoveRepository.DeleteAsync(request.Id, token);
             return Unit.Value;
         }, token);
 }

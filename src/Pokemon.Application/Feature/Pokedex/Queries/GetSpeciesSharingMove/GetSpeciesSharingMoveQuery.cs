@@ -1,18 +1,18 @@
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Queries.GetSpeciesSharingMove;
 
-/// <summary>Consulta GetSpeciesSharingMove: proyecta una lectura coherente sin modificar el estado.</summary>
-public sealed record GetSpeciesSharingMoveQuery(Guid Id) : IRequest<IReadOnlyList<SpeciesView>>;
+public sealed record GetSpeciesSharingMoveQuery(Guid Id, int Offset = 0, int Limit = 100) : IQuery<IReadOnlyList<SpeciesView>>;
 
-public sealed class GetSpeciesSharingMoveQueryHandler(IPokedexUnitOfWork store) : IRequestHandler<GetSpeciesSharingMoveQuery, IReadOnlyList<SpeciesView>>
+/// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
+public sealed class GetSpeciesSharingMoveQueryHandler(IPokedexReadSession reader) : IRequestHandler<GetSpeciesSharingMoveQuery, IReadOnlyList<SpeciesView>>
 {
     public Task<IReadOnlyList<SpeciesView>> Handle(GetSpeciesSharingMoveQuery request, CancellationToken token) =>
-        store.Read<IReadOnlyList<SpeciesView>>(data => SharingSpecies(data, request.Id), token);
-    private static IReadOnlyList<SpeciesView> SharingSpecies(IPokedexReader data, Guid id)
-    {
-        PokedexMapping.Move(data, id);
-        return data.Species.Where(s => s.Learnset.Any(e => e.MoveId == id)).OrderBy(s => s.Id).Select(s => PokedexMapping.View(data, s)).ToArray();
-    }
+        reader.ReadAsync<IReadOnlyList<SpeciesView>>(async data =>
+        {
+            await PokedexMapping.MoveAsync(data, request.Id, token);
+            return await PokedexMapping.ViewsAsync(data, await data.Species.FindByMoveAsync(request.Id, new CatalogPage(request.Offset, request.Limit), token), token);
+        }, token);
 }

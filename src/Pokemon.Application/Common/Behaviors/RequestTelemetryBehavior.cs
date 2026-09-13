@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Pokemon.Application.Feature.Battle;
 using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Pokedex;
@@ -7,7 +8,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using MediatR;
 
-namespace Pokemon.Api.Observability;
+namespace Pokemon.Application.Common.Behaviors;
 
 /// <summary>
 /// Envuelve todos los handlers de MediatR para medir duración y resultado, y crear
@@ -63,9 +64,9 @@ public sealed class RequestTelemetryBehavior<TRequest, TResponse>(ILogger<Reques
     }
 }
 
-internal static class RequestTelemetry
+public static class RequestTelemetry
 {
-    internal const string Name = "Pokemon.Cqrs";
+    public const string Name = "Pokemon.Cqrs";
     internal static readonly ActivitySource Source = new(Name);
     private static readonly Meter Meter = new(Name);
     internal static readonly Counter<long> Count = Meter.CreateCounter<long>("pokemon.requests");

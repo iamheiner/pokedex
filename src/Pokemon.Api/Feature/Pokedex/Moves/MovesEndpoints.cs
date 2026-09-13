@@ -16,8 +16,8 @@ public static class MovesEndpoints
     {
         var group = endpoints.MapGroup("/moves").WithTags("Pokedex - Moves")
             .ProducesProblem(400).ProducesProblem(404).ProducesProblem(409).ProducesProblem(415).ProducesProblem(500);
-        group.MapGet("/", async (ISender sender, CancellationToken token) =>
-            Results.Ok(await sender.Send(new ListMovesQuery(), token)))
+        group.MapGet("/", async (ISender sender, CancellationToken token, int? offset, int? limit) =>
+            Results.Ok(await sender.Send(new ListMovesQuery(offset ?? 0, limit ?? 100), token)))
             .Produces<IReadOnlyList<MoveView>>().WithSummary("Lista movimientos");
         group.MapGet("/{id:guid}", async (Guid id, ISender sender, CancellationToken token) =>
             Results.Ok(await sender.Send(new GetMoveQuery(id), token)))
@@ -36,11 +36,11 @@ public static class MovesEndpoints
             return Results.NoContent();
         }).Produces(204).WithSummary("Elimina un movimiento; rechaza referencias en uso");
 
-        group.MapGet("/{id:guid}/pokemon", async (Guid id, ISender sender, CancellationToken token) =>
-            Results.Ok(await sender.Send(new GetPokemonSharingMoveQuery(id), token)))
+        group.MapGet("/{id:guid}/pokemon", async (Guid id, ISender sender, CancellationToken token, int? offset, int? limit) =>
+            Results.Ok(await sender.Send(new GetPokemonSharingMoveQuery(id, offset ?? 0, limit ?? 100), token)))
             .Produces<IReadOnlyList<PokemonView>>().WithSummary("Lista ejemplares que tienen aprendido este movimiento");
-        group.MapGet("/{id:guid}/species", async (Guid id, ISender sender, CancellationToken token) =>
-            Results.Ok(await sender.Send(new GetSpeciesSharingMoveQuery(id), token)))
+        group.MapGet("/{id:guid}/species", async (Guid id, ISender sender, CancellationToken token, int? offset, int? limit) =>
+            Results.Ok(await sender.Send(new GetSpeciesSharingMoveQuery(id, offset ?? 0, limit ?? 100), token)))
             .Produces<IReadOnlyList<SpeciesView>>().WithSummary("Lista especies que pueden aprender este movimiento");
     }
 }

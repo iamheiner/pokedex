@@ -213,6 +213,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<Pokemon.Domain.Battle.Repositories.IBattleRepository, InMemoryBattleRepository>();
             services.RemoveAll<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>();
             services.AddSingleton<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork());
+            services.RemoveAll<Pokemon.Domain.Pokedex.Repositories.IPokedexReadSession>();
+            services.AddSingleton<Pokemon.Domain.Pokedex.Repositories.IPokedexReadSession>(provider =>
+                (Pokemon.Domain.Pokedex.Repositories.IPokedexReadSession)provider.GetRequiredService<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>());
             foreach (var descriptor in services.Where(d => d.ImplementationType == typeof(Pokemon.Infrastructure.PersistenceMigrationService)).ToArray())
                 services.Remove(descriptor);
             services.Configure<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckServiceOptions>(options => options.Registrations.Clear());

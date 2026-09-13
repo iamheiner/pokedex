@@ -1,14 +1,17 @@
 using MediatR;
+using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex.Queries.ListSpecies;
 
-/// <summary>Consulta ListSpecies: proyecta una lectura coherente sin modificar el estado.</summary>
-public sealed record ListSpeciesQuery() : IRequest<IReadOnlyList<SpeciesView>>;
+public sealed record ListSpeciesQuery(int Offset = 0, int Limit = 100) : IQuery<IReadOnlyList<SpeciesView>>;
 
-public sealed class ListSpeciesQueryHandler(IPokedexUnitOfWork store) : IRequestHandler<ListSpeciesQuery, IReadOnlyList<SpeciesView>>
+/// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
+public sealed class ListSpeciesQueryHandler(IPokedexReadSession reader) : IRequestHandler<ListSpeciesQuery, IReadOnlyList<SpeciesView>>
 {
     public Task<IReadOnlyList<SpeciesView>> Handle(ListSpeciesQuery request, CancellationToken token) =>
-        store.Read<IReadOnlyList<SpeciesView>>(data => data.Species.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ThenBy(e => e.Id).Select(e => PokedexMapping.View(data, e)).ToArray(), token);
-
+        reader.ReadAsync<IReadOnlyList<SpeciesView>>(async data =>
+        {
+            return await PokedexMapping.ViewsAsync(data, await data.Species.ListAsync(new CatalogPage(request.Offset, request.Limit), token), token);
+        }, token);
 }

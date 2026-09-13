@@ -1,3 +1,4 @@
+using Pokemon.Application.Common.Messaging;
 using MediatR;
 using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Battle.Contracts;
@@ -5,7 +6,7 @@ using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Application.Feature.Damage;
 namespace Pokemon.Application.Feature.Battle.Commands.PlayTurn;
 
-public sealed record PlayTurnCommand(Guid BattleId, PlayTurnInput Data) : IRequest<BattleView>;
+public sealed record PlayTurnCommand(Guid BattleId, PlayTurnInput Data) : ICommand<BattleView>;
 
 /// <summary>
 /// Resuelve una sola acción dentro de la transacción. Valida la versión antes de obtener

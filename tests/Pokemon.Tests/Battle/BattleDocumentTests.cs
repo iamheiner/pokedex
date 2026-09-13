@@ -1,12 +1,20 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Pokemon.Infrastructure.Battle.Postgres;
+using Pokemon.Infrastructure.Persistence;
+using Pokemon.Infrastructure.Persistence.Repositories;
+using Pokemon.Infrastructure.Persistence.Migrations;
+using Pokemon.Infrastructure.Persistence.Serialization;
 namespace Pokemon.Tests.Battle;
 
 public sealed class BattleDocumentTests
 {
     [Theory]
-    [InlineData(0)] [InlineData(1)] [InlineData(10)] [InlineData(40)] [InlineData(41)] [InlineData(59)]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(10)]
+    [InlineData(40)]
+    [InlineData(41)]
+    [InlineData(59)]
     public void RoundTripPreservesEveryStateIncludingStruggleAndDraw(int turns)
     {
         var battle = BattleDomainTests.Duel(19, 19);
@@ -15,8 +23,12 @@ public sealed class BattleDocumentTests
         Assert.Equal(JsonSerializer.Serialize(battle), JsonSerializer.Serialize(restored));
     }
     [Theory]
-    [InlineData("format")] [InlineData("version")] [InlineData("damage")]
-    [InlineData("actor")] [InlineData("move")] [InlineData("null-move")]
+    [InlineData("format")]
+    [InlineData("version")]
+    [InlineData("damage")]
+    [InlineData("actor")]
+    [InlineData("move")]
+    [InlineData("null-move")]
     public void InconsistentDocumentsFailAsStorageErrors(string fault)
     {
         var battle = BattleDomainTests.Next(BattleDomainTests.Duel());

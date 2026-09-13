@@ -79,9 +79,10 @@ public sealed class CqrsTests
         services.AddLogging();
         services.AddApplication();
         services.AddSingleton<IBattleRepository, InMemoryBattleRepository>();
+        services.AddSingleton<IBattleReader>(provider => provider.GetRequiredService<IBattleRepository>());
         services.AddSingleton<IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork(seed: false));
+        services.AddSingleton<IPokedexReadSession>(provider => (IPokedexReadSession)provider.GetRequiredService<IPokedexUnitOfWork>());
         services.AddSingleton(random);
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestTelemetryBehavior<,>));
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 
