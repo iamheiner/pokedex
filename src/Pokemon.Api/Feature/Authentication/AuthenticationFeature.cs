@@ -45,8 +45,9 @@ public static class AuthenticationFeature
             };
         });
 
-        // Protege también endpoints futuros, salud, OpenAPI y Scalar sin depender de
-        // que alguien recuerde añadir RequireAuthorization en cada nueva ruta.
+        // Protege también endpoints futuros, OpenAPI y Scalar sin depender de que alguien
+        // recuerde añadir RequireAuthorization en cada nueva ruta. Las sondas de salud
+        // declaran AllowAnonymous de forma explícita; son la única excepción.
         var policy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
             .RequireAuthenticatedUser().Build();
         services.AddAuthorizationBuilder().SetDefaultPolicy(policy).SetFallbackPolicy(policy);

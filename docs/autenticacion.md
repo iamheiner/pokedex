@@ -47,9 +47,9 @@ También se acepta `POKEMON_ACCESS_TOKEN` para usar un token obtenido previament
 - Caducidad obligatoria y fecha de inicio de validez, con 30 segundos de tolerancia de reloj.
 - Tokens firmados: se rechazan tokens manipulados, sin firma o con otros algoritmos.
 
-Se usa el encabezado `Authorization: Bearer <access_token>`. Ni una cookie ni un token en la URL autentican operaciones de negocio o sondas de salud. Sin token o con token inválido se devuelve **401** y `WWW-Authenticate: Bearer`, sin revelar el motivo criptográfico al cliente.
+Se usa el encabezado `Authorization: Bearer <access_token>`. Ni una cookie ni un token en la URL autentican operaciones de negocio. Sin token o con token inválido se devuelve **401** y `WWW-Authenticate: Bearer`, sin revelar el motivo criptográfico al cliente.
 
-La política cubre daño, CRUD, consultas, partidas y `/health` y `/health/ready`. Las sondas externas deben enviar un token válido. Las sondas internas de los contenedores de PostgreSQL y Keycloak pertenecen a esos servicios, no a la API Pokémon.
+La política de respaldo cubre daño, CRUD, consultas, partidas, OpenAPI y Scalar. `/health` y `/health/ready` declaran `AllowAnonymous` de forma explícita: un orquestador o balanceador no puede adjuntar un Bearer a sus sondas, y estas rutas no exponen datos de negocio. La prueba `Every_mapped_endpoint_rejects_anonymous_requests_before_executing` comprueba que sean la única excepción. Las sondas internas de los contenedores de PostgreSQL y Keycloak pertenecen a esos servicios, no a la API Pokémon.
 
 ## Por qué la documentación tiene una cookie
 

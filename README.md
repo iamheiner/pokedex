@@ -4,7 +4,7 @@ Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS
 
 La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. Especies, movimientos, Pokémon y partidas se guardan en PostgreSQL y sobreviven al reinicio. El catálogo inicial solo se inserta al crear el esquema. Configuración y garantías en [persistencia](docs/persistencia.md).
 
-Todos los endpoints requieren autenticación con **Keycloak**, incluidas las sondas de salud y la documentación. Scalar redirige al login (usuario local `trainer`, contraseña `trainer_local_only`). Las operaciones de negocio exigen un access token Bearer. Configuración, ejemplos y límites en [autenticación](docs/autenticacion.md).
+Todos los endpoints requieren autenticación con **Keycloak**, incluida la documentación; las sondas `/health` y `/health/ready` son la única excepción anónima para que orquestadores y balanceadores puedan consultarlas. Scalar redirige al login (usuario local `trainer`, contraseña `trainer_local_only`). Las operaciones de negocio exigen un access token Bearer. Configuración, ejemplos y límites en [autenticación](docs/autenticacion.md).
 
 ## Arranque con Docker
 
@@ -104,7 +104,7 @@ La Pokédex usa PostgreSQL con operaciones atómicas y restricciones relacionale
 
 La suite contiene **601 casos sin base de datos y 20 contra PostgreSQL real**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
 
-Docker ejecuta las pruebas antes de publicar una imagen multietapa con usuario no privilegiado. Se pueden obtener datos de cobertura con:
+La imagen multietapa solo compila y publica la API con usuario no privilegiado; las pruebas se ejecutan con el SDK, en CI y, para PostgreSQL real, con el perfil `postgres-tests` de Compose. Se pueden obtener datos de cobertura con:
 
 ```powershell
 dotnet test PokemonTwo.slnx -c Release --filter "Category!=Postgres" --collect:"XPlat Code Coverage" --results-directory TestResults

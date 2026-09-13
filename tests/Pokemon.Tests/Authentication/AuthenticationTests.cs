@@ -19,12 +19,19 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.NotEmpty(endpoints);
         foreach (var endpoint in endpoints)
         {
-            Assert.True(endpoint.Metadata.GetMetadata<IAllowAnonymous>() is null, endpoint.RoutePattern.RawText);
             var path = Regex.Replace(endpoint.RoutePattern.RawText!, @"\{[^}]+\}", "00000000-0000-0000-0000-000000000201");
+            // Las sondas de salud son la única excepción anónima: un orquestador no puede enviar Bearer.
+            var probe = path is "/health" or "/health/ready";
+            Assert.True((endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null) == probe, endpoint.RoutePattern.RawText);
             var methods = endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods ?? ["GET"];
             foreach (var method in methods)
             {
                 using var response = await client.SendAsync(new HttpRequestMessage(new HttpMethod(method), path));
+                if (probe)
+                {
+                    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                    continue;
+                }
                 var documentation = path.StartsWith("/scalar") || path.StartsWith("/openapi");
                 Assert.True(response.StatusCode == (documentation ? HttpStatusCode.Redirect : HttpStatusCode.Unauthorized), $"{method} {path}: {response.StatusCode}");
                 if (documentation)
@@ -73,7 +80,19 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = null;
         client.DefaultRequestHeaders.Add("Cookie", "access_token=" + TestTokens.Create());
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/health?access_token=" + TestTokens.Create())).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/pokemon?access_token=" + TestTokens.Create())).StatusCode);
+    }
+
+    [Theory]
+    [InlineData("/health")]
+    [InlineData("/health/ready")]
+    public async Task Health_probes_answer_anonymous_requests(string path)
+    {
+        using var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = null;
+        using var response = await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(response.Headers.WwwAuthenticate);
     }
 
     [Fact]
@@ -89,7 +108,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
     }
 
     [Fact]
-    public async Task Documentation_cookie_cannot_authorize_business_or_health_endpoints()
+    public async Task Documentation_cookie_cannot_authorize_business_endpoints()
     {
         using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
         client.DefaultRequestHeaders.Authorization = null;
@@ -105,7 +124,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         client.DefaultRequestHeaders.Add("Cookie", options.Cookie.Name + "=" + options.TicketDataFormat.Protect(ticket));
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/scalar/v1")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/openapi/v1.json")).StatusCode);
-        foreach (var path in new[] { "/pokemon", "/moves", "/species", "/health", "/health/ready", "/battles/" + Guid.NewGuid() })
+        foreach (var path in new[] { "/pokemon", "/moves", "/species", "/damage", "/battles/" + Guid.NewGuid() })
             Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(path)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/battles", null)).StatusCode);
     }
