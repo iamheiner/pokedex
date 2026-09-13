@@ -226,11 +226,15 @@ He separado las responsabilidades en cuatro proyectos:
 src/
   Pokemon.Domain/          Reglas, agregados y contratos de persistencia
   Pokemon.Application/     Commands, Queries y coordinación de casos de uso
-  Pokemon.Infrastructure/  Repositorios Dapper, transacciones y migraciones
+  Pokemon.Infrastructure/  Adaptadores de acceso a sistemas externos y persistencia
   Pokemon.Api/             Endpoints, autenticación y configuración HTTP
 tests/
   Pokemon.Tests/           Pruebas de dominio, HTTP, arquitectura y persistencia
 ```
+
+Infrastructure es la capa destinada a implementar la comunicación con sistemas externos: bases de datos, APIs de terceros, servicios de mensajería o cachés. Estos adaptadores implementan contratos definidos hacia el interior de la solución, para que las reglas de negocio y los casos de uso no dependan de una tecnología o proveedor concreto.
+
+En esta versión, Infrastructure contiene el acceso a PostgreSQL mediante Dapper, las transacciones y las migraciones. Los adaptadores para otras integraciones se añadirían aquí cuando fueran necesarios. La configuración de autenticación y telemetría del host permanece en la API.
 
 Domain no conoce ASP.NET, MediatR ni PostgreSQL. Los contratos de repositorio y de unidad de trabajo están en el dominio; sus implementaciones viven en `Infrastructure/Persistence`. La unidad de trabajo es compartida y crea los repositorios según se necesitan dentro de cada operación.
 
