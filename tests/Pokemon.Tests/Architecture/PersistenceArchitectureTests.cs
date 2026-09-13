@@ -7,6 +7,13 @@ namespace Pokemon.Tests.Architecture;
 public sealed class PersistenceArchitectureTests
 {
     [Fact]
+    public void Infrastructure_does_not_ship_in_memory_persistence()
+    {
+        Assert.DoesNotContain(typeof(PostgresBattleRepository).Assembly.GetTypes(),
+            type => type.Name.StartsWith("InMemory", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Domain_has_no_outward_dependencies()
     {
         var references = typeof(IBattleRepository).Assembly.GetReferencedAssemblies().Select(reference => reference.Name!);

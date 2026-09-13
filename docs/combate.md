@@ -77,7 +77,7 @@ Un fallo o cancelación antes de publicar conserva el estado anterior. Un fallo 
 
 Battle es la raíz del agregado y concentra las reglas. BattlePokemon y BattleMove son datos internos inmutables de la partida. El historial también es inmutable y se expone como colección de solo lectura. Application/Feature/Battle contiene dos Commands, una Query, contratos HTTP y mapeo de snapshots. El contrato IBattleRepository pertenece a Domain/Battle/Repositories. La API únicamente adapta HTTP.
 
-Infrastructure/Battle implementa IBattleRepository con PostgreSQL en el modo normal. Las partidas sobreviven al reinicio y las acciones se confirman con bloqueo por fila y transacciones. Se conserva un adaptador de memoria explícito para pruebas. El esquema, el formato durable, las migraciones y sus límites están en [persistencia](persistencia.md).
+Infrastructure/Battle implementa IBattleRepository con PostgreSQL en el modo normal. Las partidas sobreviven al reinicio y las acciones se confirman con bloqueo por fila y transacciones. El adaptador en memoria existe únicamente en el proyecto de pruebas. El esquema, el formato durable, las migraciones y sus límites están en [persistencia](persistencia.md).
 
 Se mantienen las simplificaciones de los ejercicios anteriores: un tipo por Pokémon, estadísticas normales para el daño y ataques de potencia fija. No se añaden objetos, estados alterados, cambios de Pokémon, experiencia, evolución, prioridad especial de movimientos ni inteligencia artificial. Los clientes eligen ambos ataques; el script de demostración automatiza esa elección tomando el primer movimiento con usos.
 

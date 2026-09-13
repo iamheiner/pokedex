@@ -8,4 +8,8 @@
     <PackageReference Include="Npgsql" Version="10.0.3" />
     <EmbeddedResource Include="Battle/Postgres/Migrations/001_battles.sql" LogicalName="BattleMigration001.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Pokemon.Tests" />
+    <EmbeddedResource Include="Pokedex/Postgres/Migrations/001_pokedex.sql" LogicalName="PokedexMigration001.sql" />
+  </ItemGroup>
 </Project>

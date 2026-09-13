@@ -1,6 +1,6 @@
 using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
-namespace Pokemon.Infrastructure.Pokedex;
+namespace Pokemon.Tests.Persistence;
 
 /// <summary>Repositorio privado de un snapshot; la unidad de trabajo controla su publicación.</summary>
 internal sealed class InMemoryOwnedPokemonRepository : IOwnedPokemonRepository

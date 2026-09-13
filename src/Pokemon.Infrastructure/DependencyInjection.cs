@@ -2,47 +2,38 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pokemon.Domain.Pokedex.Repositories;
-using Pokemon.Infrastructure.Pokedex;
 using Npgsql;
 using Pokemon.Domain.Battle.Repositories;
-using Pokemon.Infrastructure.Battle;
+using Pokemon.Infrastructure.Pokedex.Postgres;
 using Pokemon.Infrastructure.Battle.Postgres;
 namespace Pokemon.Infrastructure;
 
-/// <summary>Composición del adaptador. PostgreSQL es el modo normal; memoria requiere selección explícita.</summary>
+/// <summary>Composición del adaptador. PostgreSQL es el único almacenamiento de la aplicación.</summary>
 public static class DependencyInjection
 {
     public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork());
-        services.AddBattlePersistence(configuration);
-    }
-
-    private static void AddBattlePersistence(this IServiceCollection services, IConfiguration configuration)
-    {
         services.AddHealthChecks();
-        var provider = configuration["BattlePersistence:Provider"] ?? "Postgres";
-        if (string.Equals(provider, "Memory", StringComparison.OrdinalIgnoreCase))
-        {
-            services.AddSingleton<IBattleRepository, InMemoryBattleRepository>();
-            return;
-        }
-        if (!string.Equals(provider, "Postgres", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Unsupported BattlePersistence provider.");
         var connection = configuration.GetConnectionString("Battles");
         if (string.IsNullOrWhiteSpace(connection))
             throw new InvalidOperationException("ConnectionStrings:Battles is required for PostgreSQL. Use Docker Compose or configure the connection explicitly.");
         services.AddSingleton(_ => NpgsqlDataSource.Create(connection));
         services.AddSingleton<IBattleRepository, PostgresBattleRepository>();
+        services.AddSingleton<IPokedexUnitOfWork, PostgresPokedexUnitOfWork>();
+        services.AddSingleton<PokedexDatabaseMigrator>();
         services.AddSingleton<BattleDatabaseMigrator>();
-        services.AddHostedService<BattleMigrationService>();
+        services.AddHostedService<PersistenceMigrationService>();
         services.AddHealthChecks().AddCheck<BattleDatabaseHealthCheck>("postgres-battles");
     }
 }
 
 /// <summary>No acepta peticiones hasta que el esquema esté listo; un fallo de base de datos no activa memoria silenciosamente.</summary>
-internal sealed class BattleMigrationService(BattleDatabaseMigrator migrator) : IHostedService
+internal sealed class PersistenceMigrationService(BattleDatabaseMigrator migrator, PokedexDatabaseMigrator pokedex) : IHostedService
 {
-    public Task StartAsync(CancellationToken token) => migrator.Migrate(token);
+    public async Task StartAsync(CancellationToken token)
+    {
+        await migrator.Migrate(token);
+        await pokedex.Migrate(token);
+    }
     public Task StopAsync(CancellationToken token) => Task.CompletedTask;
 }

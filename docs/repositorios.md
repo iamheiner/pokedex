@@ -8,7 +8,7 @@ Los contratos de repositorio pertenecen a **Domain** y sus implementaciones a **
 | Contratos Species, CatalogMove y OwnedPokemon | Domain/Pokedex/Repositories |
 | Coordinación transaccional de Pokédex | Domain/Pokedex/Repositories/IPokedexUnitOfWork |
 | SQL, mapeo JSONB y bloqueo por partida | Infrastructure/Battle/Postgres |
-| Repositorios de Pokédex y snapshots en memoria | Infrastructure/Pokedex |
+| Repositorios PostgreSQL de Pokédex y snapshot transaccional | Infrastructure/Pokedex/Postgres |
 | Registro de persistencia y servicio de migración | Infrastructure/DependencyInjection |
 | Consulta SQL de readiness | Infrastructure/Battle/Postgres/BattleDatabaseHealthCheck |
 
@@ -30,7 +30,7 @@ IPokedexReader expone las colecciones del snapshot coherente para las consultas 
 
 Los contratos de los repositorios de Pokédex son síncronos porque trabajan dentro de ese snapshot; la unidad de trabajo asíncrona delimita la E/S y el acceso al estado. Si se incorpora un catálogo SQL grande, habrá que diseñar consultas paginadas y carga selectiva en Infrastructure, en lugar de trasladar automáticamente el catálogo entero a memoria.
 
-Este cambio conserva el alcance de almacenamiento: partidas en PostgreSQL y Pokédex en memoria.
+Toda la aplicación usa PostgreSQL: partidas y Pokédex. Las clases InMemory están exclusivamente en tests/Pokemon.Tests/Persistence. El contenedor publicado no incluye implementaciones de persistencia en memoria.
 
 ## Verificación de arquitectura
 

@@ -88,10 +88,11 @@ La URL pública local es `http://localhost:18080`, pero la API consulta el descu
 Para ejecutar la API desde el SDK contra Keycloak local:
 
 ```powershell
-docker compose up -d --wait keycloak
+docker compose -f compose.yaml -f compose.dev.yaml up -d --wait postgres keycloak
+$env:ConnectionStrings__Battles = 'Host=localhost;Port=54329;Database=pokemon;Username=pokemon;Password=pokemon_local_only;GSS Encryption Mode=Disable'
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
 $env:Authentication__DocumentationClientSecret = 'pokemon_docs_local_only'
-dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --BattlePersistence:Provider=Memory
+dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080
 ```
 
 La URI de retorno registrada debe coincidir con ese puerto. Fuera del entorno local hay que usar HTTPS, `start` de Keycloak, secretos propios suministrados por el despliegue, redirect URIs exactas y acceso restringido a la consola administrativa. La API falla al arrancar si falta emisor/audiencia o si se configura un emisor HTTP sin habilitarlo expresamente.

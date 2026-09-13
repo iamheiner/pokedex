@@ -2,7 +2,7 @@
 
 Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Keycloak, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
 
-La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. Las partidas se guardan en PostgreSQL y sobreviven al reinicio. La colección de la Pokédex sigue en memoria. Configuración y garantías en [persistencia](docs/persistencia.md).
+La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. Especies, movimientos, Pokémon y partidas se guardan en PostgreSQL y sobreviven al reinicio. El catálogo inicial solo se inserta al crear el esquema. Configuración y garantías en [persistencia](docs/persistencia.md).
 
 Todos los endpoints requieren autenticación con **Keycloak**, incluidas las sondas de salud y la documentación. Scalar redirige al login (usuario local `trainer`, contraseña `trainer_local_only`). Las operaciones de negocio exigen un access token Bearer. Configuración, ejemplos y límites en [autenticación](docs/autenticacion.md).
 
@@ -27,17 +27,18 @@ Después de iniciar sesión con Keycloak, en Scalar selecciona **Damage → Test
 
 Compose habilita la documentación y el dashboard para uso local. La API y la UI solo se publican en loopback. OTLP circula por la red interna de Docker. El dashboard admite acceso anónimo y pierde los datos al reiniciarse; no es una configuración de publicación pública ni de retención de producción.
 
-## Ejecución y pruebas sin Docker
+## Ejecución y pruebas con el SDK
 
 Requiere SDK .NET 10.0.302 o compatible según `global.json`.
 
 ```powershell
 dotnet test PokemonTwo.slnx -c Release --filter 'Category!=Postgres'
-docker compose up -d --wait keycloak
+docker compose -f compose.yaml -f compose.dev.yaml up -d --wait postgres keycloak
+$env:ConnectionStrings__Battles = 'Host=localhost;Port=54329;Database=pokemon;Username=pokemon;Password=pokemon_local_only;GSS Encryption Mode=Disable'
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
 $env:Authentication__DocumentationClientSecret = 'pokemon_docs_local_only'
-# Ejecución efímera sin PostgreSQL; para persistencia local, consultar docs/persistencia.md.
-dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true --BattlePersistence:Provider=Memory
+# La API utiliza PostgreSQL también al ejecutarse con el SDK.
+dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true
 ```
 
 La URI de retorno del cliente de documentación debe coincidir con el puerto usado. Sin `OTEL_EXPORTER_OTLP_ENDPOINT` la API funciona sin collector. Para una demostración con Aspire, usar Compose.
@@ -76,8 +77,8 @@ src/
     Feature/Pokedex/             # Commands, Queries, contratos y puerto transaccional
     Feature/Battle/              # Crear, consultar y resolver partidas
   Pokemon.Infrastructure/
-    Pokedex/                     # Almacén en memoria y datos iniciales
-    Battle/                      # Adaptadores PostgreSQL/memoria, formato durable y migraciones
+    Pokedex/                     # Repositorios PostgreSQL, unidad de trabajo y migración inicial
+    Battle/                      # Repositorio PostgreSQL, formato durable y migraciones
   Pokemon.Api/
     Errors/                      # Contrato uniforme de errores HTTP
     Feature/Damage/              # Endpoint, contratos y seis ejemplos
@@ -97,7 +98,7 @@ La fórmula sigue el PDF con decimal y redondeo hacia abajo al final. Se compara
 
 MediatR se fija exactamente a **12.5.0**, con [licencia Apache 2.0](https://github.com/jbogard/MediatR/blob/v12.5.0/LICENSE), sin clave comercial. Una actualización requiere revisar licencia y compatibilidad. Microsoft.OpenApi se fija en una versión corregida del aviso GHSA-v5pm-xwqc-g5wc, sin deshabilitar la auditoría NuGet.
 
-La Pokédex usa almacenamiento en memoria con operaciones atómicas; no requiere PostgreSQL ni caché. Sus límites y evolución están en [decisiones de Pokédex](docs/pokedex.md). El cálculo conserva sus [decisiones de diseño](docs/decisiones.md).
+La Pokédex usa PostgreSQL con operaciones atómicas y restricciones relacionales; no requiere caché. Sus límites y evolución están en [decisiones de Pokédex](docs/pokedex.md). El cálculo conserva sus [decisiones de diseño](docs/decisiones.md).
 
 ## Verificación
 

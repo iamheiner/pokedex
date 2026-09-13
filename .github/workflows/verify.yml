@@ -25,5 +25,6 @@ jobs:
         run: |
           ./scripts/verify-authentication.ps1
           ./scripts/verify-documentation-login.ps1
+          ./scripts/verify-pokedex.ps1
       - if: always()
         run: docker compose down

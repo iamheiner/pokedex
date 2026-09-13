@@ -34,7 +34,7 @@ La separación prevista al cerrar el ejercicio 1 fue:
 - Aprendizaje: relación especie–movimiento–nivel; no se deduce únicamente del tipo.
 - Partida: adversarios, turno/fase, estado y finalización.
 
-La Pokédex usa referencias vivas al catálogo y las partidas usan snapshots. El agotamiento y esfuerzo evitan combates sin progreso; las reglas completas están en combate.md. En el ejercicio 1 no se anticiparon repositorios vacíos. El ejercicio 2 añade el puerto transaccional y el almacén en memoria descritos en pokedex.md. PostgreSQL será la opción si se necesita almacenamiento; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
+La Pokédex usa referencias vivas al catálogo y las partidas usan snapshots. El agotamiento y esfuerzo evitan combates sin progreso; las reglas completas están en combate.md. En el ejercicio 1 no se anticiparon repositorios vacíos. El ejercicio 2 usa repositorios PostgreSQL y una unidad de trabajo transaccional descritos en pokedex.md; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
 
 ## Operación y entrega
 

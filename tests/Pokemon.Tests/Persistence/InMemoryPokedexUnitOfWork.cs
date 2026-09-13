@@ -1,6 +1,7 @@
+using Pokemon.Infrastructure.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 using Pokemon.Domain.Pokedex;
-namespace Pokemon.Infrastructure.Pokedex;
+namespace Pokemon.Tests.Persistence;
 
 /// <summary>
 /// Adaptador de un único proceso. Serializa operaciones para proteger relaciones y unicidad.

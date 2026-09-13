@@ -1,5 +1,5 @@
+using Pokemon.Tests.Persistence;
 using Pokemon.Domain.Battle.Repositories;
-using Pokemon.Infrastructure.Battle;
 using Pokemon.Domain.Pokedex.Repositories;
 using Pokemon.Infrastructure.Pokedex;
 using Pokemon.Application.Common.Exceptions;

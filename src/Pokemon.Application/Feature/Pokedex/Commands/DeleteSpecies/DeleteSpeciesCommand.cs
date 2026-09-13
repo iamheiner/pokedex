@@ -1,3 +1,4 @@
+using Pokemon.Domain.Pokedex;
 using MediatR;
 using Pokemon.Application.Feature.Pokedex.Contracts;
 using Pokemon.Domain.Pokedex.Repositories;

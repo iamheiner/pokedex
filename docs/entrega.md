@@ -19,7 +19,7 @@ Para revisar la entrega:
 5. Ejecutar el script de combate y consultar después la partida por su identificador. Comparar salud inicial y final y comprobar que la colección no ha cambiado.
 6. Abrir Aspire y localizar CreateBattleCommand, GetBattleQuery y PlayTurnCommand dentro de sus peticiones HTTP.
 
-Las partidas usan PostgreSQL para conservar el estado tras reiniciar; la Pokédex mantiene memoria, permitida por el enunciado. Las diferencias y garantías se explican en [persistencia](persistencia.md). No se necesita caché. El diseño separa dominio, aplicación, transporte e infraestructura; el dominio no depende de ASP.NET, MediatR ni almacenamiento.
+Partidas y Pokédex usan PostgreSQL para conservar todos los datos tras reiniciar. Las diferencias y garantías se explican en [persistencia](persistencia.md). No se necesita caché. El diseño separa dominio, aplicación, transporte e infraestructura; el dominio no depende de ASP.NET, MediatR ni almacenamiento.
 
 Para la entrevista, conviene poder explicar por qué un movimiento del catálogo tiene identidad mientras Move del cálculo es un objeto valor; por qué aprendizaje no equivale a coincidir en tipo; por qué la partida usa snapshots; cómo se evitan dos ataques concurrentes; y cómo se termina un combate con inmunidades. Las decisiones de simplificación son parte de la solución y están descritas en los documentos de cada ejercicio.
 

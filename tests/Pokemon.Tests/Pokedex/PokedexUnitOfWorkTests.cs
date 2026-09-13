@@ -1,3 +1,4 @@
+using Pokemon.Tests.Persistence;
 using Pokemon.Domain;
 using Pokemon.Domain.Pokedex;
 using Pokemon.Infrastructure.Pokedex;

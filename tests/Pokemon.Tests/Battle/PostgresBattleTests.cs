@@ -173,7 +173,6 @@ public sealed class PostgresBattleTests
         {
             builder.UseEnvironment("Production");
             Authentication.TestTokens.Configure(builder);
-            builder.UseSetting("BattlePersistence:Provider", "Postgres");
             builder.UseSetting("ConnectionStrings:Battles", connection);
             builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "");
         }

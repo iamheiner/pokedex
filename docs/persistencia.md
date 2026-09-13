@@ -4,7 +4,7 @@ Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los s
 
 Las partidas se almacenan en PostgreSQL 17. Se recuperan por su mismo identificador después de reiniciar la API o recrear el contenedor de base de datos conservando su volumen. Se guardan participantes, características, movimientos, salud, usos, versión, resultado e historial.
 
-La Pokédex conserva su adaptador en memoria. Sus ediciones se pierden al reiniciar, pero una partida existente sigue funcionando porque conserva sus propias copias de los adversarios. El cambio de persistencia de partidas no altera el contrato de los tres endpoints de combate.
+La Pokédex también se guarda en PostgreSQL: especies, movimientos, ejemplares, planes de aprendizaje y cuatro movimientos aprendidos. Los cambios y eliminaciones sobreviven al reinicio. Las partidas conservan sus snapshots independientes del catálogo.
 
 ## Arranque
 
@@ -28,7 +28,7 @@ $env:Authentication__DocumentationClientSecret = 'pokemon_docs_local_only'
 dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true
 ```
 
-El ejemplo usa la credencial local predeterminada; si se cambia, la conexión de la API debe usar el mismo valor. Sin conexión configurada, el modo Postgres falla al arrancar: no se cambia a memoria silenciosamente. Para una ejecución deliberadamente efímera, puede seleccionarse `--BattlePersistence:Provider=Memory`; las pruebas HTTP generales usan ese modo explícito.
+El ejemplo usa la credencial local predeterminada; si se cambia, la conexión de la API debe usar el mismo valor. Sin conexión configurada, la API falla al arrancar. PostgreSQL es el único almacenamiento de la aplicación. Las implementaciones InMemory están únicamente en tests/Pokemon.Tests/Persistence y el host de pruebas las registra sustituyendo los repositorios reales. La clave ConnectionStrings:Battles se mantiene por compatibilidad y ahora proporciona la conexión compartida de partidas y Pokédex.
 
 ## Modelo almacenado y DDD
 
@@ -72,7 +72,7 @@ Suite contra PostgreSQL real (8 casos):
 docker compose run --build --rm postgres-tests
 ```
 
-Los casos reales crean esquemas temporales independientes y solo eliminan esos esquemas al terminar. Comprueban migraciones simultáneas, restricciones, recuperación desde otra conexión y otra API, continuación de una partida, partidas terminadas, escrituras concurrentes, bloqueo por fila y rollback/cancelación. No requieren publicar el puerto de PostgreSQL. Sin `POKEMON_POSTGRES_TEST_CONNECTION`, esos ocho casos se omiten explícitamente; no deben contarse como verificados por la suite sin base de datos. El workflow de GitHub incluye ambas ejecuciones.
+Los casos reales crean esquemas temporales independientes y solo eliminan esos esquemas al terminar. Comprueban migraciones simultáneas, restricciones, recuperación desde otra conexión y otra API, continuación de una partida, partidas terminadas, escrituras concurrentes, bloqueo por fila y rollback/cancelación. No requieren publicar el puerto de PostgreSQL. Sin `POKEMON_POSTGRES_TEST_CONNECTION`, los casos de PostgreSQL se omiten explícitamente; no deben contarse como verificados por la suite sin base de datos. El workflow de GitHub incluye ambas ejecuciones.
 
 Para verificar recreación del contenedor y reinicio real de la API:
 
@@ -89,3 +89,25 @@ Las partidas antiguas que solo existían en memoria no se migran automáticament
 La implementación utiliza [NpgsqlDataSource, parámetros y transacciones](https://www.npgsql.org/doc/basic-usage.html), [bloqueos por fila de PostgreSQL](https://www.postgresql.org/docs/17/explicit-locking.html) y [trazas Npgsql con OpenTelemetry](https://www.npgsql.org/doc/diagnostics/tracing.html).
 
 Verificación realizada: ambas suites pasaron (562 + 8 casos), la recreación de PostgreSQL conservó el volumen y se recuperó íntegramente una partida en versión 2, que continuó en versión 3. La recreación posterior de la API también conservó esa versión. Readiness respondió 200 y no quedaron esquemas temporales de pruebas. El workflow remoto todavía no se ha ejecutado.
+
+
+## Pokédex relacional y carga inicial
+
+PokedexDatabaseMigrator crea una migración versionada independiente y ejecuta PokedexSeed dentro de la misma transacción inicial. La tabla pokedex_schema_migrations impide reinsertar el catálogo al reiniciar, incluso si se han borrado todos sus datos. No se usa un chequeo de «tabla vacía» para repoblar.
+
+Las tablas son pokedex_moves, pokedex_species, pokedex_learnset, pokedex_pokemon y pokedex_learned_moves. Incluyen claves primarias, nombres únicos del catálogo, límites numéricos, claves foráneas diferidas e índices sobre referencias. Las reglas de exactamente cuatro movimientos y aprendizaje por nivel siguen protegidas por el dominio; los repositorios guardan sus relaciones dentro de la misma transacción.
+
+Cada repositorio mantiene los cambios de una operación y los escribe mediante SQL parametrizado. Las lecturas usan REPEATABLE READ y una transacción de solo lectura. Las escrituras toman un advisory lock transaccional del catálogo antes de cargar datos, de modo que comprobaciones y cambios se serializan también entre instancias. Un error o cancelación revierte todos los repositorios. Las partidas mantienen su bloqueo independiente por fila.
+
+El snapshot transaccional se materializa para el pequeño catálogo de esta prueba. No es una caché ni un almacenamiento alternativo a PostgreSQL. Para catálogos grandes, será necesario introducir consultas paginadas y carga selectiva; no se afirma que cargar todas las filas escale sin límites.
+
+La sonda /health/ready comprueba los esquemas de partidas y Pokédex. Ambos deben inicializarse correctamente antes de aceptar peticiones.
+
+### Comprobar el reinicio del catálogo
+
+```powershell
+$env:POKEMON_CLIENT_SECRET = 'pokemon_client_local_only'
+./scripts/verify-pokedex-persistence.ps1 -BaseUrl http://localhost:51966
+```
+
+El script crea sus propios movimientos, especie y Pokémon, conserva salud y orden de movimientos, recrea PostgreSQL manteniendo el volumen y reinicia la API. Verifica que todos esos datos sean idénticos y elimina únicamente los recursos creados por la prueba. Las pruebas SQL también comprueban que reiniciar la migración no resucite Pokémon eliminados ni sobrescriba movimientos editados.

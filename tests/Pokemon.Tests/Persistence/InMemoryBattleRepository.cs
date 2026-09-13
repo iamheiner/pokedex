@@ -1,7 +1,7 @@
 using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Domain.Battle;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
-namespace Pokemon.Infrastructure.Battle;
+namespace Pokemon.Tests.Persistence;
 
 /// <summary>
 /// Almacén de partidas de un proceso. El agregado es inmutable: solo se publica una nueva

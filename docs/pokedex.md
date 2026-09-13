@@ -59,11 +59,11 @@ La comprobación de CRUD sobre una API real está en `scripts/verify-pokedex.ps1
 
 Cada caso de uso tiene su Command o Query y su handler bajo Application/Feature/Pokedex. La API solo adapta HTTP y envía a MediatR. Las proyecciones de salida se separan de los agregados y los contratos de entrada.
 
-IPokedexUnitOfWork es el contrato de unidad de trabajo de Domain/Pokedex/Repositories: Read ofrece una lectura coherente, Write agrupa comprobaciones y cambios en una transacción. Infrastructure implementa el puerto con memoria, copia del estado y un semáforo por almacén. Las entidades son inmutables; las colecciones del dominio son copias de solo lectura. Si un comando falla o se cancela antes de publicar, no se conserva ninguna modificación. Comprobación de unicidad y escritura se ejecutan juntas, incluso bajo peticiones concurrentes.
+IPokedexUnitOfWork es el contrato de unidad de trabajo de Domain/Pokedex/Repositories: Read ofrece una lectura coherente, Write agrupa comprobaciones y cambios en una transacción. Infrastructure implementa el puerto con PostgreSQL, repositorios por agregado y una transacción compartida. Un bloqueo transaccional del catálogo coordina escritores de distintas instancias. Las entidades son inmutables; las colecciones del dominio son copias de solo lectura. Si un comando falla o se cancela antes de publicar, no se conserva ninguna modificación. Comprobación de unicidad y escritura se ejecutan juntas, incluso bajo peticiones concurrentes.
 
 Esta implementación está pensada para un catálogo pequeño en un único proceso. **Los cambios se pierden al reiniciar la API** y cada réplica tendría su propio estado. Los PUT concurrentes se serializan: la última escritura válida prevalece, sin control de versión del cliente. Las listas devuelven todo el catálogo con orden estable; no se implementa paginación para este alcance.
 
-El enunciado permite memoria, por lo que no se añade PostgreSQL ni caché. Si se necesita durabilidad, varias réplicas o un catálogo grande, la siguiente implementación será PostgreSQL, con repositorios y consultas específicas, restricciones de unicidad y claves foráneas, transacciones y control de versión. El puerto de callbacks actual requeriría evolucionar para no cargar todo el catálogo en SQL. El dominio, los contratos HTTP y los casos de uso proporcionan fronteras para esa evolución; no se afirma que baste con cambiar una cadena de conexión. Valkey solo se incorporaría con un caso de uso medido de caché.
+Aunque el enunciado permite memoria, la solución utiliza PostgreSQL para que todos los datos sobrevivan al reinicio. El catálogo se carga una sola vez durante la migración inicial. Los dobles en memoria residen únicamente en el proyecto de pruebas. Para un catálogo grande deberá evolucionar la lectura del snapshot completo hacia consultas paginadas y carga selectiva. Valkey solo se incorporaría con un caso de uso medido de caché.
 
 «Mis Pokémon» representa una única colección de demostración: el ejercicio no solicita cuentas ni autenticación. Las operaciones heredan trazas, logs y métricas del comportamiento de MediatR, visibles en Aspire.
 
@@ -79,7 +79,7 @@ Se cargan cinco especies, cinco ejemplares de nivel 20 y 21 movimientos al inici
 | Sandshrew | 104 | 204 | [Scarlet/Violet, forma normal](https://pokemondb.net/pokedex/sandshrew/moves/9) |
 | Eevee | 105 | 205 | [Scarlet/Violet](https://pokemondb.net/pokedex/eevee/moves/9) |
 
-Se incluye un subconjunto de movimientos aprendidos por nivel, no el catálogo oficial completo. Los niveles y las potencias de los ataques seleccionados proceden de esas tablas. Se omiten efectos secundarios, prioridad y mecánicas de acumulación de daño. Los datos están versionados en PokedexSeed.cs y no requieren conexiones externas al ejecutar ni probar la solución. Los seis escenarios del ejercicio 1 siguen siendo ejemplos independientes del catálogo persistido en memoria.
+Se incluye un subconjunto de movimientos aprendidos por nivel, no el catálogo oficial completo. Los niveles y las potencias de los ataques seleccionados proceden de esas tablas. Se omiten efectos secundarios, prioridad y mecánicas de acumulación de daño. Los datos están versionados en PokedexSeed.cs y se insertan en PostgreSQL al inicializar el esquema; no requieren consultar una API externa. Los seis escenarios del ejercicio 1 siguen siendo ejemplos independientes del catálogo persistido en PostgreSQL.
 
 ## Verificación
 

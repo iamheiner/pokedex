@@ -1,3 +1,4 @@
+using Pokemon.Tests.Persistence;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -203,11 +204,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Production");
         Authentication.TestTokens.Configure(builder);
-        builder.UseSetting("BattlePersistence:Provider", "Memory");
+        builder.UseSetting("ConnectionStrings:Battles", "Host=unused-test-database;Database=pokemon");
         builder.UseSetting("ApiDocumentation:Enabled", "true");
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "");
         builder.ConfigureServices(services =>
         {
+            services.RemoveAll<Pokemon.Domain.Battle.Repositories.IBattleRepository>();
+            services.AddSingleton<Pokemon.Domain.Battle.Repositories.IBattleRepository, InMemoryBattleRepository>();
+            services.RemoveAll<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>();
+            services.AddSingleton<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork());
+            foreach (var descriptor in services.Where(d => d.ImplementationType == typeof(Pokemon.Infrastructure.PersistenceMigrationService)).ToArray())
+                services.Remove(descriptor);
+            services.Configure<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckServiceOptions>(options => options.Registrations.Clear());
             services.RemoveAll<IDamageRandom>(); services.AddSingleton<IDamageRandom>(new FixedRandom(100));
         });
     }

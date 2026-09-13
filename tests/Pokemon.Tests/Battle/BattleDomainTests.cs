@@ -1,6 +1,6 @@
+using Pokemon.Tests.Persistence;
 using Pokemon.Domain;
 using Pokemon.Domain.Battle;
-using Pokemon.Infrastructure.Battle;
 using Pokemon.Application.Feature.Battle;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
 namespace Pokemon.Tests.Battle;
