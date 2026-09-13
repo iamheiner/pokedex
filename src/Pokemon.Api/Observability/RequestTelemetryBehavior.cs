@@ -1,3 +1,5 @@
+using Pokemon.Application.Feature.Pokedex;
+using Pokemon.Domain.Pokedex;
 using Pokemon.Application.Common.Exceptions;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
@@ -30,7 +32,7 @@ public sealed class RequestTelemetryBehavior<TRequest, TResponse>(ILogger<Reques
             outcome = "cancelled";
             throw;
         }
-        catch (InvalidDamageRequestException)
+        catch (Exception error) when (error is InvalidDamageRequestException or PokedexRuleException or PokedexNotFoundException or PokedexConflictException)
         {
             outcome = "invalid";
             activity?.SetTag("request.outcome", outcome);

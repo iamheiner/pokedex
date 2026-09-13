@@ -516,6 +516,7 @@
           "OpenTelemetry.Instrumentation.Http": "[1.18.0, )",
           "OpenTelemetry.Instrumentation.Runtime": "[1.18.0, )",
           "Pokemon.Application": "[1.0.0, )",
+          "Pokemon.Infrastructure": "[1.0.0, )",
           "Scalar.AspNetCore": "[2.17.3, )"
         }
       },
@@ -528,6 +529,12 @@
       },
       "pokemon.domain": {
         "type": "Project"
+      },
+      "pokemon.infrastructure": {
+        "type": "Project",
+        "dependencies": {
+          "Pokemon.Application": "[1.0.0, )"
+        }
       }
     }
   }

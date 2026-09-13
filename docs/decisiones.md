@@ -4,7 +4,7 @@
 
 Combatant representa un ejemplar concreto con identidad y movimientos aprendidos. Protege salud, nivel, estadísticas y máximo cuatro movimientos. Move es un objeto valor inmutable: nombre, tipo y poder determinan su igualdad. DamageCalculator es un servicio de dominio porque combina dos ejemplares y un movimiento sin pertenecer exclusivamente a uno de ellos.
 
-El cálculo no modifica salud ni comprueba turnos: calcula daño teórico, incluso si la salud es cero. Resolver quién puede actuar y descontar salud corresponde a una partida del ejercicio 3. No se han implementado los ejercicios 2 y 3.
+El cálculo no modifica salud ni comprueba turnos: calcula daño teórico, incluso si la salud es cero. Resolver quién puede actuar y descontar salud corresponde a una partida del ejercicio 3. El ejercicio 2 se documenta en [Pokédex](pokedex.md); el ejercicio 3 sigue pendiente.
 
 Se utiliza un único tipo por Pokémon y siempre Attack/Defense base. SpecialAttack/SpecialDefense se conservan por el enunciado, pero no participan. Introducir categoría física/especial sería una ampliación explícita; no se infiere solo por el tipo. No se añaden STAB, críticos, precisión, doble tipo ni efectos secundarios. Estos límites son deliberados y deben explicarse en entrevista.
 
@@ -26,7 +26,7 @@ Los parámetros JSON de constructor son obligatorios y los valores no anulables 
 
 ## Evolución hacia ejercicios 2 y 3
 
-Antes de implementarlos se distinguirán:
+La separación prevista al cerrar el ejercicio 1 fue:
 
 - Especie/base: datos compartidos de una especie.
 - Ejemplar: identidad, nivel, salud y movimientos aprendidos.
@@ -34,7 +34,7 @@ Antes de implementarlos se distinguirán:
 - Aprendizaje: relación especie–movimiento–nivel; no se deduce únicamente del tipo.
 - Partida: adversarios, turno/fase, estado y finalización.
 
-Hay que decidir qué ocurre con ejemplares existentes al editar un movimiento del catálogo, y cómo terminar un combate sin progreso por inmunidades. No se anticipan repositorios vacíos ni persistencia ahora. PostgreSQL será la opción si se necesita almacenamiento; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
+Hay que decidir qué ocurre con ejemplares existentes al editar un movimiento del catálogo, y cómo terminar un combate sin progreso por inmunidades. En el ejercicio 1 no se anticiparon repositorios vacíos. El ejercicio 2 añade el puerto transaccional y el almacén en memoria descritos en pokedex.md. PostgreSQL será la opción si se necesita almacenamiento; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
 
 ## Operación y entrega
 
