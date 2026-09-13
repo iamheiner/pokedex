@@ -32,7 +32,7 @@ El script prepara el entorno completo:
 
 **La inicialización de los datos la hace la aplicación al arrancar.** Aplica las migraciones y, en una base nueva, carga cinco especies, cinco ejemplares con cuatro movimientos cada uno y 21 movimientos. Keycloak importa el realm de demostración con su usuario y sus clientes. No necesitas ejecutar SQL ni crear esos datos manualmente.
 
-El script se puede repetir: conserva los volúmenes, las partidas y las modificaciones de la Pokédex. Al abrir otra terminal, vuelve a ejecutarlo para preparar esa sesión. Si ya utilizas otros puertos, indica los mismos valores; no cambies el puerto del login de un Keycloak ya inicializado sin revisar [autenticación](docs/autenticacion.md).
+El script se puede repetir: conserva los volúmenes, las partidas y las modificaciones de la Pokédex. Al abrir otra terminal, vuelve a ejecutarlo para preparar esa sesión. Si ya utilizas otros puertos, indica los mismos valores; no cambies el puerto del login de un Keycloak ya inicializado sin revisar [la configuración de Keycloak](#autenticación-con-keycloak).
 
 Por defecto la API usa el puerto 5080. Para utilizar, por ejemplo, el 51966:
 
@@ -256,7 +256,7 @@ En Application, los Commands coordinan las escrituras mediante `IUnitOfWork` y l
 
 La API se organiza por Feature y recurso. Cada operación tiene un archivo dentro de `Commands` o `Queries`; sus métodos registran la ruta y adaptan la petición HTTP. Por ejemplo: `Feature/Pokedex/Moves/Commands/CreateMoveEndpoint.cs`.
 
-El recorrido habitual es **endpoint → MediatR → handler → dominio y repositorios**. Los detalles están en [repositorios y unidad de trabajo](docs/repositorios.md) y [organización de endpoints](docs/endpoints.md).
+El recorrido habitual es **endpoint → MediatR → handler → dominio y repositorios**. Los contratos del dominio y los adaptadores de Infrastructure mantienen esa separación también en el acceso a datos.
 
 ## Bonus: lo añadido sobre los ejercicios
 
@@ -278,13 +278,17 @@ Para detener el entorno al terminar:
 docker compose down
 ```
 
-Los datos permanecen en los volúmenes. Añadir `-v` a ese comando los elimina. El formato de las partidas y las garantías transaccionales están en [persistencia](docs/persistencia.md).
+Los datos permanecen en los volúmenes. Añadir `-v` a ese comando los elimina. El formato de las partidas y sus reglas de recuperación se explican en [combate](docs/combate.md).
 
 ### Autenticación con Keycloak
 
 Las operaciones de negocio exigen un token Bearer. Scalar utiliza un inicio de sesión OIDC para que se pueda abrir desde el navegador. Las únicas rutas anónimas son `/health` y `/health/ready`, destinadas a comprobar el estado de la aplicación.
 
 El entorno incluye un usuario y un cliente de demostración. La autenticación no implementa propiedad de los recursos por usuario: los usuarios autenticados acceden al mismo catálogo y a las mismas partidas.
+
+El realm se importa desde `docker/keycloak/pokemon-realm.json` en el primer arranque. Si ya existe, cambiar `.env` o el archivo de importación no modifica sus usuarios ni sus clientes. Para cambiar el puerto de una instalación existente, entra en la administración de Keycloak (cuenta local `admin` / `admin_local_only`), selecciona el realm `pokemon` y el cliente `pokemon-documentation`, y actualiza sus URI de redirección permitidas al valor `http://localhost:<puerto-api>/signin-oidc`. Arranca después con ese mismo puerto. Las credenciales personalizadas de los clientes deben coincidir con las que utiliza Compose.
+
+El script de autenticación obtiene tokens mediante el cliente `pokemon-tools`. Si defines `POKEMON_ACCESS_TOKEN`, utiliza ese token hasta que lo sustituyas o retires la variable. Cuando caduque la sesión de Scalar, recarga la página para volver a autenticarte.
 
 ### Documentación interactiva y errores uniformes
 

@@ -63,7 +63,7 @@ try {
     try {
         $null = Invoke-RestMethod "$api/species?limit=1" -Headers (Get-PokemonAuthorizationHeaders) -TimeoutSec 20
     } catch {
-        throw 'Los servicios están iniciados, pero ha fallado la consulta autenticada. Revisa las credenciales de Keycloak en docs/autenticacion.md.'
+        throw 'Los servicios están iniciados, pero ha fallado la consulta autenticada. Revisa las credenciales de Keycloak en el apartado de Keycloak del README.'
     }
 
     Write-Host "Proyecto preparado. API: $api"

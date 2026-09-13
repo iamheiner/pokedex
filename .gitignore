@@ -8,3 +8,4 @@ TestResults/
 
 .env
 .postgres-agent.local.json
+/.local/docs/

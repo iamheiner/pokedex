@@ -7,3 +7,4 @@ docs
 
 .env
 .postgres-agent.local.json
+.local/

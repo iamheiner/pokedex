@@ -1,6 +1,6 @@
 # Seis Pokémon de ejemplo
 
-Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+Antes de probar los ejemplos, ejecuta `. ./scripts/initialize.ps1` desde la raíz del proyecto, con el puerto que utilices. El [arranque del README](../README.md#inicializar-el-proyecto-y-empezar-a-probar) prepara los servicios y la autenticación de esa terminal. Scalar dispone de login interactivo.
 
 La fuente ejecutable está en `src/Pokemon.Api/Feature/Damage/Examples/damage-requests.json`. Scalar muestra seis escenarios y los tests envían todos por HTTP con factor 100. Los ejemplares tienen nivel 50 y salud total simplificada igual al HP base; no se calculan estadísticas oficiales por nivel, IV o EV. Solo se usan las formas normales, de un único tipo. El ejemplo no simula ni valida reglas de evolución.
 

@@ -6,7 +6,7 @@ Combatant representa un ejemplar concreto con identidad y movimientos aprendidos
 
 El cálculo no modifica salud ni comprueba turnos: calcula daño teórico, incluso si la salud es cero. Resolver quién puede actuar y descontar salud corresponde a una partida del ejercicio 3. El ejercicio 2 se documenta en [Pokédex](pokedex.md); el ejercicio 3 se documenta en [combate](combate.md).
 
-Se utiliza un único tipo por Pokémon y siempre Attack/Defense base. SpecialAttack/SpecialDefense se conservan por el enunciado, pero no participan. Introducir categoría física/especial sería una ampliación explícita; no se infiere solo por el tipo. No se añaden STAB, críticos, precisión, doble tipo ni efectos secundarios. Estos límites son deliberados y deben explicarse en entrevista.
+Se utiliza un único tipo por Pokémon y siempre Attack/Defense base. SpecialAttack/SpecialDefense se conservan por el enunciado, pero no participan. Introducir categoría física/especial sería una ampliación explícita; no se infiere solo por el tipo. No se añaden STAB, críticos, precisión, doble tipo ni efectos secundarios. Estos límites acotan las reglas incluidas en el cálculo.
 
 El nivel se limita a 1–100; estadísticas a 1–10000 y poder a 1–250. Los dos últimos límites son decisiones del contrato para una calculadora acotada, no límites oficiales del juego. Salud actual admite 0–salud total. Se admiten cero movimientos para calcular daño recibido; no más de cuatro ni nombres repetidos ignorando mayúsculas. Los espacios dentro de nombres se conservan y no se normalizan silenciosamente.
 
@@ -26,7 +26,7 @@ Los parámetros JSON de constructor son obligatorios y los valores no anulables 
 
 ## Evolución hacia ejercicios 2 y 3
 
-La separación prevista al cerrar el ejercicio 1 fue:
+El cálculo se integra con los otros ejercicios mediante estos conceptos:
 
 - Especie/base: datos compartidos de una especie.
 - Ejemplar: identidad, nivel, salud y movimientos aprendidos.
@@ -34,7 +34,7 @@ La separación prevista al cerrar el ejercicio 1 fue:
 - Aprendizaje: relación especie–movimiento–nivel; no se deduce únicamente del tipo.
 - Partida: adversarios, turno/fase, estado y finalización.
 
-La Pokédex usa referencias vivas al catálogo y las partidas usan snapshots. El agotamiento y esfuerzo evitan combates sin progreso; las reglas completas están en combate.md. En el ejercicio 1 no se anticiparon repositorios vacíos. El ejercicio 2 usa repositorios PostgreSQL y una unidad de trabajo transaccional descritos en pokedex.md; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
+La Pokédex usa referencias vivas al catálogo y las partidas usan snapshots. El agotamiento y esfuerzo evitan combates sin progreso; las reglas completas están en combate.md. El ejercicio 2 utiliza repositorios PostgreSQL y una unidad de trabajo transaccional descritos en [Pokédex](pokedex.md). El resultado aleatorio del cálculo no se almacena en caché.
 
 ## Operación y entrega
 

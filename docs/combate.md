@@ -1,6 +1,6 @@
 # Ejercicio 3: combate por turnos
 
-Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+Antes de probar los ejemplos, ejecuta `. ./scripts/initialize.ps1` desde la raíz del proyecto, con el puerto que utilices. El [arranque del README](../README.md#inicializar-el-proyecto-y-empezar-a-probar) prepara los servicios y la autenticación de esa terminal. Scalar dispone de login interactivo.
 
 Una partida enfrenta dos ejemplares de la Pokédex. Al crearla se copian sus características, salud y cuatro movimientos. A partir de ese momento la partida conserva su propia salud: combatir no daña los ejemplares de la colección y editar o eliminar su ficha no cambia una partida ya iniciada.
 
@@ -77,7 +77,7 @@ Un fallo o cancelación antes de publicar conserva el estado anterior. Un fallo 
 
 Battle es la raíz del agregado y concentra las reglas. BattlePokemon y BattleMove son datos internos inmutables de la partida. El historial también es inmutable y se expone como colección de solo lectura. Application/Feature/Battle contiene dos Commands, una Query, contratos HTTP y mapeo de snapshots. El contrato IBattleRepository pertenece a Domain/Battle/Repositories. La API únicamente adapta HTTP.
 
-Infrastructure/Battle implementa IBattleRepository con PostgreSQL en el modo normal. Las partidas sobreviven al reinicio y las acciones se confirman con bloqueo por fila y transacciones. El adaptador en memoria existe únicamente en el proyecto de pruebas. El esquema, el formato durable, las migraciones y sus límites están en [persistencia](persistencia.md).
+Infrastructure/Persistence/Repositories implementa IBattleRepository con PostgreSQL. Las partidas sobreviven al reinicio y las acciones se confirman con bloqueo por fila y transacciones. El adaptador en memoria existe únicamente en el proyecto de pruebas. La inicialización y la comprobación de reinicio están en el [README](../README.md#persistencia-después-de-reiniciar).
 
 Se mantienen las simplificaciones de los ejercicios anteriores: un tipo por Pokémon, estadísticas normales para el daño y ataques de potencia fija. No se añaden objetos, estados alterados, cambios de Pokémon, experiencia, evolución, prioridad especial de movimientos ni inteligencia artificial. Los clientes eligen ambos ataques; el script de demostración automatiza esa elección tomando el primer movimiento con usos.
 
@@ -93,6 +93,10 @@ El script muestra cada acción, comprueba la finalización y su consulta posteri
 
 Las pruebas cubren velocidad y empate inicial, daño y límites de salud, consumo, inmunidades, redondeo a cero, agotamiento, esfuerzo y retroceso, ganador y empate, historial inmutable, snapshots, partidas independientes, cancelación, rollback, 500 saneado, contratos JSON, concurrencia y un combate HTTP completo. La suite incluye las regresiones de los ejercicios 1 y 2.
 
-Verificación inicial del combate, antes de incorporar PostgreSQL: 549 pruebas superadas en Windows y durante la construcción Linux de Docker. El script de combate completó una partida real en diez acciones, comprobó el estado final, el rechazo posterior con 409 y la salud intacta de la colección. Scalar y Aspire respondieron HTTP 200. El resultado de otra ejecución puede variar por el factor aleatorio.
+## Recuperación de partidas
 
-La ampliación de persistencia se verifica con 601 casos generales y 20 casos PostgreSQL reales, además del recorrido de reinicio documentado en persistencia.md.
+PostgreSQL guarda cada partida en un documento JSONB versionado que incluye el estado inicial y las acciones resueltas. `BattleDocumentCodec` reconstruye el agregado mediante sus reglas y comprueba que los resultados coinciden con los almacenados. La recuperación utiliza el azar que ya quedó registrado; no genera otro factor ni vuelve a consultar la Pokédex.
+
+La identidad, la versión y el documento se guardan juntos. El repositorio bloquea la fila durante una acción y la unidad de trabajo confirma la transacción. Si la operación falla antes de confirmar, conserva el estado anterior. Tras perder una respuesta, el cliente consulta la versión de la partida antes de enviar otra acción.
+
+El documento utiliza `formatVersion: 1`. Un cambio de fórmula o de reglas que afecte a partidas existentes requiere mantener un lector compatible o migrar el formato. Las migraciones del esquema se registran para que los siguientes arranques conserven los datos.

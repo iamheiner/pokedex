@@ -1,6 +1,6 @@
 # Ejercicio 2: Pokédex
 
-Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+Antes de probar los ejemplos, ejecuta `. ./scripts/initialize.ps1` desde la raíz del proyecto, con el puerto que utilices. El [arranque del README](../README.md#inicializar-el-proyecto-y-empezar-a-probar) prepara los servicios y la autenticación de esa terminal. Scalar dispone de login interactivo.
 
 Una especie es la ficha común de un Pokémon, como Charmander. Un ejemplar es uno concreto de tu colección, con nombre, nivel, salud y cuatro ataques elegidos. El catálogo de movimientos describe los ataques. El plan de aprendizaje relaciona una especie con los ataques que puede aprender y el nivel mínimo de cada uno.
 
@@ -59,7 +59,7 @@ La comprobación de CRUD sobre una API real está en `scripts/verify-pokedex.ps1
 
 Cada caso de uso tiene su Command o Query y su handler bajo Application/Feature/Pokedex. La API solo adapta HTTP y envía a MediatR. Las proyecciones de salida se separan de los agregados y los contratos de entrada.
 
-`IReadSession` ofrece consultas coherentes y `IUnitOfWork` agrupa comprobaciones y cambios atómicos. Ambos contratos están en Domain. Infrastructure los implementa con Dapper, PostgreSQL y una transacción compartida por operación. Los filtros se ejecutan en SQL y las relaciones se recuperan en lotes. [Repositorios](repositorios.md) detalla los límites entre capas.
+`IReadSession` ofrece consultas coherentes y `IUnitOfWork` agrupa comprobaciones y cambios atómicos. Ambos contratos están en Domain. Infrastructure los implementa con Dapper, PostgreSQL y una transacción compartida por operación. Los filtros se ejecutan en SQL y las relaciones se recuperan en lotes. La [arquitectura del README](../README.md#cómo-está-organizada-la-solución) explica los límites entre capas.
 
 Los datos sobreviven al reinicio de la API y de PostgreSQL conservando su volumen. Un bloqueo transaccional del catálogo coordina escritores de distintas instancias. Los PUT concurrentes se serializan: la última escritura válida prevalece, sin versión del cliente para el catálogo. Los combates sí tienen control de versión.
 
@@ -87,6 +87,6 @@ Se incluye un subconjunto de movimientos aprendidos por nivel, no el catálogo o
 
 Las pruebas de Pokédex cubren los tres CRUD, Location, campos obligatorios, proyecciones, cuatro movimientos, incompatibilidad y nivel, referencias, edición compartida, rollback, cancelación, aislamiento de colecciones, altas concurrentes, ejemplos OpenAPI ejecutables y uso de un ejemplar en POST /damage sin modificar su salud. Se ejecutan junto con las pruebas del ejercicio 1.
 
-La Pokédex está integrada en develop como base del [ejercicio 3](combate.md), implementado en feature/battle. main conserva la entrega inicial.
+El [ejercicio 3](combate.md) utiliza los ejemplares de esta Pokédex para crear partidas independientes.
 
-La verificación actual y las decisiones de evolución están recogidas en la [revisión arquitectónica](revision-arquitectura.md). El workflow remoto de GitHub todavía no se ha ejecutado.
+Los comandos para repetir las pruebas están en el [README](../README.md#ejecutar-las-pruebas).
