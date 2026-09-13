@@ -90,7 +90,7 @@ src/
 tests/Pokemon.Tests/            # Dominio, matriz, CQRS y HTTP real
 ```
 
-Flujo: HTTP → ISender → comportamiento de telemetría → handler de Command/Query → dominio y puerto de almacenamiento. Domain no depende de ASP.NET, MediatR ni OpenTelemetry. Los agregados protegen sus invariantes; los handlers coordinan cada caso de uso. La organización por Feature admite nuevos casos de uso sin acumularlos en Program.cs.
+Flujo: HTTP → ISender → comportamiento de telemetría → handler de Command/Query → dominio y puerto de almacenamiento. Domain no depende de ASP.NET, MediatR ni OpenTelemetry. Los agregados protegen sus invariantes; los handlers coordinan cada caso de uso. La organización por Feature admite nuevos casos de uso sin acumularlos en Program.cs. Cada operación HTTP dispone de su propio archivo en `Commands` o `Queries` dentro de su recurso, con métodos documentados para registrar la ruta y atender la petición. Véase la [organización de endpoints](docs/endpoints.md).
 
 ## Decisiones principales
 
@@ -102,7 +102,7 @@ La Pokédex usa PostgreSQL con operaciones atómicas y restricciones relacionale
 
 ## Verificación
 
-La suite contiene **601 casos sin base de datos y 20 contra PostgreSQL real**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
+La suite contiene **604 casos sin base de datos y 20 contra PostgreSQL real**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
 
 La imagen multietapa solo compila y publica la API con usuario no privilegiado; las pruebas se ejecutan con el SDK, en CI y, para PostgreSQL real, con el perfil `postgres-tests` de Compose. Se pueden obtener datos de cobertura con:
 

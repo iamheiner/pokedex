@@ -180,6 +180,34 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.Contains("scalar", await client.GetStringAsync("/scalar/v1"), StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>Comprueba que todas las operaciones de negocio publican resumen y descripción en OpenAPI.</summary>
+    [Fact]
+    public async Task EveryBusinessOperationHasSummaryAndDescription()
+    {
+        using var client = factory.CreateClient();
+        var spec = JsonNode.Parse(await client.GetStringAsync("/openapi/v1.json"))!;
+        var resources = new[] { "damage", "moves", "species", "pokemon", "battles" };
+        var operationCount = 0;
+        foreach (var path in spec["paths"]!.AsObject())
+        {
+            if (!resources.Contains(path.Key.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()))
+                continue;
+
+            foreach (var method in new[] { "get", "post", "put", "delete" })
+            {
+                if (path.Value?[method] is not JsonObject operation)
+                    continue;
+
+                var route = $"{method.ToUpperInvariant()} {path.Key}";
+                Assert.False(string.IsNullOrWhiteSpace(operation["summary"]?.GetValue<string>()), $"Falta el resumen de {route}.");
+                Assert.False(string.IsNullOrWhiteSpace(operation["description"]?.GetValue<string>()), $"Falta la descripción de {route}.");
+                operationCount++;
+            }
+        }
+
+        Assert.Equal(23, operationCount);
+    }
+
     /// <summary>Envía una petición de daño y comprueba su respuesta de error esperada.</summary>
     private async Task AssertProblem(string json, HttpStatusCode status, string mediaType = "application/json")
     {
