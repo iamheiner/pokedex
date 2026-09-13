@@ -59,17 +59,19 @@ La comprobación de CRUD sobre una API real está en `scripts/verify-pokedex.ps1
 
 Cada caso de uso tiene su Command o Query y su handler bajo Application/Feature/Pokedex. La API solo adapta HTTP y envía a MediatR. Las proyecciones de salida se separan de los agregados y los contratos de entrada.
 
-IPokedexUnitOfWork es el contrato de unidad de trabajo de Domain/Pokedex/Repositories: Read ofrece una lectura coherente, Write agrupa comprobaciones y cambios en una transacción. Infrastructure implementa el puerto con PostgreSQL, repositorios por agregado y una transacción compartida. Un bloqueo transaccional del catálogo coordina escritores de distintas instancias. Las entidades son inmutables; las colecciones del dominio son copias de solo lectura. Si un comando falla o se cancela antes de publicar, no se conserva ninguna modificación. Comprobación de unicidad y escritura se ejecutan juntas, incluso bajo peticiones concurrentes.
+`IReadSession` ofrece consultas coherentes y `IUnitOfWork` agrupa comprobaciones y cambios atómicos. Ambos contratos están en Domain. Infrastructure los implementa con Dapper, PostgreSQL y una transacción compartida por operación. Los filtros se ejecutan en SQL y las relaciones se recuperan en lotes. [Repositorios](repositorios.md) detalla los límites entre capas.
 
-Esta implementación está pensada para un catálogo pequeño en un único proceso. **Los cambios se pierden al reiniciar la API** y cada réplica tendría su propio estado. Los PUT concurrentes se serializan: la última escritura válida prevalece, sin control de versión del cliente. Las listas devuelven todo el catálogo con orden estable; no se implementa paginación para este alcance.
+Los datos sobreviven al reinicio de la API y de PostgreSQL conservando su volumen. Un bloqueo transaccional del catálogo coordina escritores de distintas instancias. Los PUT concurrentes se serializan: la última escritura válida prevalece, sin versión del cliente para el catálogo. Los combates sí tienen control de versión.
 
-Aunque el enunciado permite memoria, la solución utiliza PostgreSQL para que todos los datos sobrevivan al reinicio. El catálogo se carga una sola vez durante la migración inicial. Los dobles en memoria residen únicamente en el proyecto de pruebas. Para un catálogo grande deberá evolucionar la lectura del snapshot completo hacia consultas paginadas y carga selectiva. Valkey solo se incorporaría con un caso de uso medido de caché.
+Las listas de movimientos, especies, ejemplares y relaciones inversas admiten `?offset=0&limit=100`. `offset` no puede ser negativo y `limit` debe estar entre 1 y 100. Una página fuera del catálogo devuelve un array vacío. Las listas generales ordenan por nombre y, en caso de empate, por identidad; las relaciones inversas ordenan por identidad. Cada petición ve una lectura coherente, aunque distintas páginas pueden variar si el catálogo cambia entre peticiones.
 
-«Mis Pokémon» representa una única colección de demostración: el ejercicio no solicita cuentas ni autenticación. Las operaciones heredan trazas, logs y métricas del comportamiento de MediatR, visibles en Aspire.
+El catálogo inicial se inserta una sola vez durante la migración. Los dobles en memoria solo existen en el proyecto de pruebas. Valkey se incorporaría si aparece una necesidad medida de caché.
+
+«Mis Pokémon» representa una colección compartida de demostración. Todos los endpoints requieren autenticación Keycloak; no se ha añadido propiedad por usuario ni un sistema multitenant. Las operaciones heredan trazas, logs y métricas de MediatR, visibles en Aspire.
 
 ## Datos iniciales y fuentes
 
-Se cargan cinco especies, cinco ejemplares de nivel 20 y 21 movimientos al iniciar el proceso. Las cinco especies tienen un único tipo en su forma normal. Sus estadísticas son las documentadas en los ejemplos del ejercicio 1. La salud inicial igual a la estadística base es una simplificación; no se calcula crecimiento por nivel.
+Se cargan cinco especies, cinco ejemplares de nivel 20 y 21 movimientos durante la primera migración. Las cinco especies tienen un único tipo en su forma normal. Sus estadísticas son las documentadas en los ejemplos del ejercicio 1. La salud inicial igual a la estadística base es una simplificación; no se calcula crecimiento por nivel.
 
 | Especie | Sufijo de ID de especie | Sufijo de ID de ejemplar | Fuente del aprendizaje |
 | --- | --- | --- | --- |
@@ -87,4 +89,4 @@ Las pruebas de Pokédex cubren los tres CRUD, Location, campos obligatorios, pro
 
 La Pokédex está integrada en develop como base del [ejercicio 3](combate.md), implementado en feature/battle. main conserva la entrega inicial.
 
-Verificación de esta entrega: 513 pruebas superadas en Windows y en Linux durante la construcción Docker. El script de CRUD se ejecutó contra la imagen arrancada y eliminó sus datos temporales. Scalar respondió HTTP 200. El workflow remoto de GitHub aún no se ha ejecutado.
+La verificación actual y las decisiones de evolución están recogidas en la [revisión arquitectónica](revision-arquitectura.md). El workflow remoto de GitHub todavía no se ha ejecutado.

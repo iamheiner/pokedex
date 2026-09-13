@@ -32,7 +32,7 @@ El ejemplo usa la credencial local predeterminada; si se cambia, la conexión de
 
 ## Modelo almacenado y DDD
 
-El dominio no depende de Npgsql, SQL ni serialización. PostgresBattleRepository implementa el puerto IBattleRepository en Infrastructure. Se utiliza SQL parametrizado con Npgsql 10.0.3; no se añade un ORM para este único agregado.
+El dominio no depende de Npgsql, SQL ni serialización. BattleRepository implementa el puerto IBattleRepository en Infrastructure. Se utiliza Dapper 2.1.79 sobre Npgsql 10.0.3 para ejecutar SQL parametrizado y mapear filas privadas a agregados. La conexión y transacción son detalles internos de Infrastructure/Persistence.
 
 La tabla `battles` tiene clave primaria UUID, versión positiva, documento JSONB y fechas de creación/actualización con zona horaria. Las restricciones verifican identidad, versión y formato del documento. La clave primaria cubre las consultas por identidad; no se añaden índices JSON que no necesita el acceso actual.
 
@@ -44,7 +44,7 @@ El historial tiene menos de 60 acciones, de modo que esta reconstrucción está 
 
 ## Transacciones y concurrencia
 
-Cada acción abre una transacción y lee su fila con `SELECT ... FOR UPDATE`. Valida expectedVersion antes de obtener el azar y escribir. Dos instancias de la API que operen sobre la misma partida quedan coordinadas por PostgreSQL; una petición obsoleta recibe 409 sin aplicar otro ataque.
+La unidad de trabajo común abre una transacción para cada operación; el repositorio de partidas lee su fila con `SELECT ... FOR UPDATE`. Valida expectedVersion antes de obtener el azar y escribir. Dos instancias de la API que operen sobre la misma partida quedan coordinadas por PostgreSQL; una petición obsoleta recibe 409 sin aplicar otro ataque.
 
 El bloqueo afecta a la partida seleccionada. Las lecturas normales ven el último estado confirmado y otras partidas pueden avanzar. Se actualizan versión, documento y fecha en una misma transacción. Una excepción antes del commit revierte los cambios.
 
@@ -52,7 +52,7 @@ No se reintenta automáticamente una escritura con resultado incierto. Si se pie
 
 ## Migraciones, disponibilidad y observabilidad
 
-`Battle/Postgres/Migrations/001_battles.sql` crea el esquema inicial. BattleDatabaseMigrator registra las versiones aplicadas en `battle_schema_migrations` y coordina arranques simultáneos mediante un bloqueo transaccional de migración. Ejecutarlo de nuevo no borra datos. Los cambios posteriores de esquema deben añadirse como migraciones nuevas, sin editar una ya entregada.
+`Persistence/Migrations/001_battles.sql` crea el esquema inicial. BattleDatabaseMigrator registra las versiones aplicadas en `battle_schema_migrations` y coordina arranques simultáneos mediante un bloqueo transaccional de migración. Ejecutarlo de nuevo no borra datos. Los cambios posteriores de esquema deben añadirse como migraciones nuevas, sin editar una ya entregada.
 
 La API no arranca si no puede aplicar o comprobar las migraciones. `/health` indica que el proceso responde; `/health/ready` comprueba PostgreSQL y el esquema y devuelve 503 cuando no están disponibles. Las consultas SQL emiten spans de Npgsql correlacionados con los handlers de MediatR y visibles en Aspire, sin registrar los valores de sus parámetros.
 
@@ -60,13 +60,13 @@ Compose usa un rol propietario para facilitar la prueba local. En un despliegue 
 
 ## Verificación reproducible
 
-Suite sin base de datos (562 casos):
+Suite sin base de datos (601 casos):
 
 ```powershell
 dotnet test PokemonTwo.slnx -c Release --filter 'Category!=Postgres'
 ```
 
-Suite contra PostgreSQL real (8 casos):
+Suite contra PostgreSQL real (20 casos):
 
 ```powershell
 docker compose run --build --rm postgres-tests
@@ -88,7 +88,7 @@ Las partidas antiguas que solo existían en memoria no se migran automáticament
 
 La implementación utiliza [NpgsqlDataSource, parámetros y transacciones](https://www.npgsql.org/doc/basic-usage.html), [bloqueos por fila de PostgreSQL](https://www.postgresql.org/docs/17/explicit-locking.html) y [trazas Npgsql con OpenTelemetry](https://www.npgsql.org/doc/diagnostics/tracing.html).
 
-Verificación realizada: ambas suites pasaron (562 + 8 casos), la recreación de PostgreSQL conservó el volumen y se recuperó íntegramente una partida en versión 2, que continuó en versión 3. La recreación posterior de la API también conservó esa versión. Readiness respondió 200 y no quedaron esquemas temporales de pruebas. El workflow remoto todavía no se ha ejecutado.
+Verificación realizada: ambas suites pasaron (601 + 20 casos), la recreación de PostgreSQL conservó el volumen y se recuperó íntegramente una partida en versión 2, que continuó en versión 3. La recreación posterior de la API también conservó esa versión. Readiness respondió 200 y no quedaron esquemas temporales de pruebas. El workflow remoto todavía no se ha ejecutado.
 
 
 ## Pokédex relacional y carga inicial
@@ -97,9 +97,9 @@ PokedexDatabaseMigrator crea una migración versionada independiente y ejecuta P
 
 Las tablas son pokedex_moves, pokedex_species, pokedex_learnset, pokedex_pokemon y pokedex_learned_moves. Incluyen claves primarias, nombres únicos del catálogo, límites numéricos, claves foráneas diferidas e índices sobre referencias. Las reglas de exactamente cuatro movimientos y aprendizaje por nivel siguen protegidas por el dominio; los repositorios guardan sus relaciones dentro de la misma transacción.
 
-Cada repositorio mantiene los cambios de una operación y los escribe mediante SQL parametrizado. Las lecturas usan REPEATABLE READ y una transacción de solo lectura. Las escrituras toman un advisory lock transaccional del catálogo antes de cargar datos, de modo que comprobaciones y cambios se serializan también entre instancias. Un error o cancelación revierte todos los repositorios. Las partidas mantienen su bloqueo independiente por fila.
+Cada repositorio ejecuta sus cambios mediante Dapper dentro de la transacción del comando. Las lecturas usan REPEATABLE READ y una transacción de solo lectura. Las operaciones que usan repositorios del catálogo toman su advisory lock antes de la primera consulta, de modo que comprobaciones y cambios se serializan también entre instancias. Un error o cancelación anterior al commit revierte todos los repositorios. Los turnos de partidas mantienen su bloqueo independiente por fila; no adquieren el bloqueo del catálogo.
 
-El snapshot transaccional se materializa para el pequeño catálogo de esta prueba. No es una caché ni un almacenamiento alternativo a PostgreSQL. Para catálogos grandes, será necesario introducir consultas paginadas y carga selectiva; no se afirma que cargar todas las filas escale sin límites.
+Las consultas son selectivas y las listas están paginadas; no se carga un snapshot completo del catálogo en memoria. Las relaciones se recuperan en lotes. El aislamiento de PostgreSQL conserva la coherencia entre esas consultas. La [guía de repositorios](repositorios.md) describe los contratos y el límite de concurrencia del bloqueo global de escrituras del catálogo.
 
 La sonda /health/ready comprueba los esquemas de partidas y Pokédex. Ambos deben inicializarse correctamente antes de aceptar peticiones.
 

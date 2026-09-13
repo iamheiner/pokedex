@@ -1,6 +1,6 @@
 # Pokémon: daño, Pokédex y combate
 
-Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Keycloak, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
+Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Dapper, PostgreSQL, Docker, Keycloak, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
 
 La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. Especies, movimientos, Pokémon y partidas se guardan en PostgreSQL y sobreviven al reinicio. El catálogo inicial solo se inserta al crear el esquema. Configuración y garantías en [persistencia](docs/persistencia.md).
 
@@ -102,7 +102,7 @@ La Pokédex usa PostgreSQL con operaciones atómicas y restricciones relacionale
 
 ## Verificación
 
-La suite contiene **562 casos sin base de datos y 8 contra PostgreSQL real**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
+La suite contiene **601 casos sin base de datos y 20 contra PostgreSQL real**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
 
 Docker ejecuta las pruebas antes de publicar una imagen multietapa con usuario no privilegiado. Se pueden obtener datos de cobertura con:
 
@@ -123,3 +123,5 @@ Los recorridos HTTP reproducibles están en `scripts/verify-pokedex.ps1` y `scri
 La suite PostgreSQL se ejecuta con `docker compose run --build --rm postgres-tests`. El script `scripts/verify-battle-persistence.ps1` comprueba la recuperación tras recrear PostgreSQL y reiniciar la API. `docker compose down` conserva las partidas; `docker compose down -v` elimina sus datos.
 
 La separación de capas y las garantías de persistencia están explicadas en [repositorios y unidad de trabajo](docs/repositorios.md).
+
+La [revisión arquitectónica](docs/revision-arquitectura.md) explica los contratos independientes del proveedor, los repositorios Dapper, la segregación CQRS y las comprobaciones realizadas. Las listas de Pokédex admiten `offset` y `limit` (0 y 100 por defecto; máximo 100).

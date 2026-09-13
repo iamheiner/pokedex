@@ -95,4 +95,4 @@ Las pruebas cubren velocidad y empate inicial, daño y límites de salud, consum
 
 Verificación inicial del combate, antes de incorporar PostgreSQL: 549 pruebas superadas en Windows y durante la construcción Linux de Docker. El script de combate completó una partida real en diez acciones, comprobó el estado final, el rechazo posterior con 409 y la salud intacta de la colección. Scalar y Aspire respondieron HTTP 200. El resultado de otra ejecución puede variar por el factor aleatorio.
 
-La ampliación de persistencia se verifica con 562 casos generales y 8 casos PostgreSQL reales, además del recorrido de reinicio documentado en persistencia.md.
+La ampliación de persistencia se verifica con 601 casos generales y 20 casos PostgreSQL reales, además del recorrido de reinicio documentado en persistencia.md.
