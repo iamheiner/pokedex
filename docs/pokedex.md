@@ -28,6 +28,8 @@ Arranca según el README y abre Scalar. Encontrarás los grupos Pokedex - Specie
 
 ```powershell
 $api = 'http://localhost:51966'
+$env:POKEMON_CLIENT_SECRET = 'pokemon_client_local_only'
+. ./scripts/authentication.ps1
 Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/species"
 Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/pokemon/00000000-0000-0000-0000-000000000201/moves"
 Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/pokemon/00000000-0000-0000-0000-000000000201/possible-moves"
