@@ -75,20 +75,28 @@ public sealed class InMemoryUnitOfWork : IUnitOfWork, IReadSession, IDisposable
             return copy;
         }
     }
+
+    /// <summary>Gestiona partidas dentro de la copia transaccional de estado utilizada por las pruebas.</summary>
     private sealed class SessionBattleRepository(Action ensure) : IBattleReader, IBattleRepository
     {
         internal readonly Dictionary<Guid, BattleAggregate> Entries = new();
+
+        /// <summary>Añade una partida completa y rechaza un identificador que ya existe.</summary>
         public Task Add(BattleAggregate battle, CancellationToken token)
         {
             ensure(); token.ThrowIfCancellationRequested();
             if (!Entries.TryAdd(battle.Id, battle)) throw new BattleConflictException("Battle identity already exists.");
             return Task.CompletedTask;
         }
+
+        /// <summary>Recupera una partida por su identificador o informa de que no existe.</summary>
         public Task<BattleAggregate> Get(Guid id, CancellationToken token)
         {
             ensure(); token.ThrowIfCancellationRequested();
             return Task.FromResult(Entries.TryGetValue(id, out var battle) ? battle : throw new BattleNotFoundException("Battle was not found."));
         }
+
+        /// <summary>Aplica una acción de forma atómica y exige avanzar una única versión de la misma partida.</summary>
         public async Task<BattleAggregate> Update(Guid id, Func<BattleAggregate, BattleAggregate> action, CancellationToken token)
         {
             var original = await Get(id, token);

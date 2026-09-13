@@ -1,8 +1,9 @@
 using Pokemon.Domain.Common.Persistence;
 namespace Pokemon.Domain.Battle.Repositories;
 
-/// <summary>Recupera una partida sin conceder operaciones para crearla o ejecutar turnos.</summary>
+/// <summary>Define la recuperación de partidas sin conceder operaciones de escritura.</summary>
 public interface IBattleReader : IReadRepository
 {
+    /// <summary>Recupera una partida por su identificador o informa de que no existe.</summary>
     Task<Battle> Get(Guid id, CancellationToken token);
 }
