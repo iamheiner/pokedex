@@ -1,0 +1,53 @@
+{
+  "attacker": {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "name": "Squirtle",
+    "level": 50,
+    "type": "Water",
+    "currentHealth": 44,
+    "totalHealth": 44,
+    "attack": 48,
+    "defense": 65,
+    "specialAttack": 50,
+    "specialDefense": 64,
+    "speed": 43,
+    "moves": [
+      {
+        "name": "Water Gun",
+        "power": 40,
+        "type": "Water"
+      },
+      {
+        "name": "Tackle",
+        "power": 40,
+        "type": "Normal"
+      }
+    ]
+  },
+  "moveName": "Water Gun",
+  "defender": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "name": "Charmander",
+    "level": 50,
+    "type": "Fire",
+    "currentHealth": 39,
+    "totalHealth": 39,
+    "attack": 52,
+    "defense": 43,
+    "specialAttack": 60,
+    "specialDefense": 50,
+    "speed": 65,
+    "moves": [
+      {
+        "name": "Ember",
+        "power": 40,
+        "type": "Fire"
+      },
+      {
+        "name": "Scratch",
+        "power": 40,
+        "type": "Normal"
+      }
+    ]
+  }
+}

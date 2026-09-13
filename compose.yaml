@@ -1,0 +1,22 @@
+services:
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:${POKEMON_API_PORT:-5080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ApiDocumentation__Enabled: "true"
+      OTEL_SERVICE_NAME: pokemon-api
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_METRIC_EXPORT_INTERVAL: "5000"
+    depends_on:
+      - aspire-dashboard
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.3
+    ports:
+      - "127.0.0.1:${ASPIRE_DASHBOARD_PORT:-18888}:18888"
+    environment:
+      # Uso local: la UI solo se publica en loopback y OTLP solo en la red de Compose.
+      ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"

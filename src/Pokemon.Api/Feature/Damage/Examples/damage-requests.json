@@ -1,0 +1,310 @@
+{
+  "resistance": {
+    "attacker": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "Charmander",
+      "level": 50,
+      "type": "Fire",
+      "currentHealth": 39,
+      "totalHealth": 39,
+      "attack": 52,
+      "defense": 43,
+      "specialAttack": 60,
+      "specialDefense": 50,
+      "speed": 65,
+      "moves": [
+        {
+          "name": "Ember",
+          "power": 40,
+          "type": "Fire"
+        },
+        {
+          "name": "Scratch",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    },
+    "moveName": "Ember",
+    "defender": {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "name": "Squirtle",
+      "level": 50,
+      "type": "Water",
+      "currentHealth": 44,
+      "totalHealth": 44,
+      "attack": 48,
+      "defense": 65,
+      "specialAttack": 50,
+      "specialDefense": 64,
+      "speed": 43,
+      "moves": [
+        {
+          "name": "Water Gun",
+          "power": 40,
+          "type": "Water"
+        },
+        {
+          "name": "Tackle",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    }
+  },
+  "weakness": {
+    "attacker": {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "name": "Squirtle",
+      "level": 50,
+      "type": "Water",
+      "currentHealth": 44,
+      "totalHealth": 44,
+      "attack": 48,
+      "defense": 65,
+      "specialAttack": 50,
+      "specialDefense": 64,
+      "speed": 43,
+      "moves": [
+        {
+          "name": "Water Gun",
+          "power": 40,
+          "type": "Water"
+        },
+        {
+          "name": "Tackle",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    },
+    "moveName": "Water Gun",
+    "defender": {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "Charmander",
+      "level": 50,
+      "type": "Fire",
+      "currentHealth": 39,
+      "totalHealth": 39,
+      "attack": 52,
+      "defense": 43,
+      "specialAttack": 60,
+      "specialDefense": 50,
+      "speed": 65,
+      "moves": [
+        {
+          "name": "Ember",
+          "power": 40,
+          "type": "Fire"
+        },
+        {
+          "name": "Scratch",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    }
+  },
+  "immunity": {
+    "attacker": {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "name": "Pikachu",
+      "level": 50,
+      "type": "Electric",
+      "currentHealth": 35,
+      "totalHealth": 35,
+      "attack": 55,
+      "defense": 40,
+      "specialAttack": 50,
+      "specialDefense": 50,
+      "speed": 90,
+      "moves": [
+        {
+          "name": "Thunder Shock",
+          "power": 40,
+          "type": "Electric"
+        },
+        {
+          "name": "Quick Attack",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    },
+    "moveName": "Thunder Shock",
+    "defender": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "name": "Sandshrew",
+      "level": 50,
+      "type": "Ground",
+      "currentHealth": 50,
+      "totalHealth": 50,
+      "attack": 75,
+      "defense": 85,
+      "specialAttack": 20,
+      "specialDefense": 30,
+      "speed": 40,
+      "moves": [
+        {
+          "name": "Sand Tomb",
+          "power": 35,
+          "type": "Ground"
+        },
+        {
+          "name": "Scratch",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    }
+  },
+  "neutral": {
+    "attacker": {
+      "id": "00000000-0000-0000-0000-000000000005",
+      "name": "Eevee",
+      "level": 50,
+      "type": "Normal",
+      "currentHealth": 55,
+      "totalHealth": 55,
+      "attack": 55,
+      "defense": 50,
+      "specialAttack": 45,
+      "specialDefense": 65,
+      "speed": 55,
+      "moves": [
+        {
+          "name": "Tackle",
+          "power": 40,
+          "type": "Normal"
+        },
+        {
+          "name": "Quick Attack",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    },
+    "moveName": "Tackle",
+    "defender": {
+      "id": "00000000-0000-0000-0000-000000000006",
+      "name": "Machop",
+      "level": 50,
+      "type": "Fighting",
+      "currentHealth": 70,
+      "totalHealth": 70,
+      "attack": 80,
+      "defense": 50,
+      "specialAttack": 35,
+      "specialDefense": 35,
+      "speed": 35,
+      "moves": [
+        {
+          "name": "Low Sweep",
+          "power": 65,
+          "type": "Fighting"
+        }
+      ]
+    }
+  },
+  "fighting": {
+    "attacker": {
+      "id": "00000000-0000-0000-0000-000000000006",
+      "name": "Machop",
+      "level": 50,
+      "type": "Fighting",
+      "currentHealth": 70,
+      "totalHealth": 70,
+      "attack": 80,
+      "defense": 50,
+      "specialAttack": 35,
+      "specialDefense": 35,
+      "speed": 35,
+      "moves": [
+        {
+          "name": "Low Sweep",
+          "power": 65,
+          "type": "Fighting"
+        }
+      ]
+    },
+    "moveName": "Low Sweep",
+    "defender": {
+      "id": "00000000-0000-0000-0000-000000000005",
+      "name": "Eevee",
+      "level": 50,
+      "type": "Normal",
+      "currentHealth": 55,
+      "totalHealth": 55,
+      "attack": 55,
+      "defense": 50,
+      "specialAttack": 45,
+      "specialDefense": 65,
+      "speed": 55,
+      "moves": [
+        {
+          "name": "Tackle",
+          "power": 40,
+          "type": "Normal"
+        },
+        {
+          "name": "Quick Attack",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    }
+  },
+  "ground": {
+    "attacker": {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "name": "Sandshrew",
+      "level": 50,
+      "type": "Ground",
+      "currentHealth": 50,
+      "totalHealth": 50,
+      "attack": 75,
+      "defense": 85,
+      "specialAttack": 20,
+      "specialDefense": 30,
+      "speed": 40,
+      "moves": [
+        {
+          "name": "Sand Tomb",
+          "power": 35,
+          "type": "Ground"
+        },
+        {
+          "name": "Scratch",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    },
+    "moveName": "Sand Tomb",
+    "defender": {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "name": "Pikachu",
+      "level": 50,
+      "type": "Electric",
+      "currentHealth": 35,
+      "totalHealth": 35,
+      "attack": 55,
+      "defense": 40,
+      "specialAttack": 50,
+      "specialDefense": 50,
+      "speed": 90,
+      "moves": [
+        {
+          "name": "Thunder Shock",
+          "power": 40,
+          "type": "Electric"
+        },
+        {
+          "name": "Quick Attack",
+          "power": 40,
+          "type": "Normal"
+        }
+      ]
+    }
+  }
+}

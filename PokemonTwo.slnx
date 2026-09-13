@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Pokemon.Api/Pokemon.Api.csproj" />
+    <Project Path="src/Pokemon.Application/Pokemon.Application.csproj" />
+    <Project Path="src/Pokemon.Domain/Pokemon.Domain.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Pokemon.Tests/Pokemon.Tests.csproj" />
+  </Folder>
+</Solution>

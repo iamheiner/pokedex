@@ -1,0 +1,68 @@
+using Pokemon.Application.Common.Exceptions;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using MediatR;
+
+namespace Pokemon.Api.Observability;
+
+/// <summary>
+/// Envuelve todos los handlers de MediatR para medir duración y resultado, y crear
+/// una traza hija de la petición HTTP. Las nuevas funcionalidades heredan este comportamiento.
+/// </summary>
+public sealed class RequestTelemetryBehavior<TRequest, TResponse>(ILogger<RequestTelemetryBehavior<TRequest, TResponse>> logger)
+    : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+{
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    {
+        var name = typeof(TRequest).Name;
+        using var activity = RequestTelemetry.Source.StartActivity(name);
+        activity?.SetTag("request.type", name);
+        var started = Stopwatch.GetTimestamp();
+        var outcome = "success";
+        try
+        {
+            var response = await next();
+            activity?.SetStatus(ActivityStatusCode.Ok);
+            return response;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            outcome = "cancelled";
+            throw;
+        }
+        catch (InvalidDamageRequestException)
+        {
+            outcome = "invalid";
+            activity?.SetTag("request.outcome", outcome);
+            throw;
+        }
+        catch (Exception error)
+        {
+            outcome = "error";
+            activity?.SetStatus(ActivityStatusCode.Error);
+            activity?.SetTag("error.type", error.GetType().Name);
+            // Se registra el tipo, sin volcar el cuerpo de la petición ni sus datos.
+            logger.LogError("Error en {RequestType}: {ErrorType}", name, error.GetType().Name);
+            throw;
+        }
+        finally
+        {
+            var elapsed = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+            activity?.SetTag("request.outcome", outcome);
+            var tags = new TagList { { "request.type", name }, { "request.outcome", outcome } };
+            RequestTelemetry.Count.Add(1, tags);
+            RequestTelemetry.Duration.Record(elapsed, tags);
+            // OpenTelemetry asocia este log con TraceId y SpanId de la actividad actual.
+            logger.LogInformation("{RequestType} terminó con {Outcome} en {ElapsedMs} ms", name, outcome, elapsed);
+        }
+    }
+}
+
+internal static class RequestTelemetry
+{
+    internal const string Name = "Pokemon.Cqrs";
+    internal static readonly ActivitySource Source = new(Name);
+    private static readonly Meter Meter = new(Name);
+    internal static readonly Counter<long> Count = Meter.CreateCounter<long>("pokemon.requests");
+    internal static readonly Histogram<double> Duration = Meter.CreateHistogram<double>("pokemon.request.duration", "ms");
+}
