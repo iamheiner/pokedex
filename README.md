@@ -29,7 +29,7 @@ Compose habilita la documentación y el dashboard para uso local. La API y la UI
 
 ## Ejecución y pruebas con el SDK
 
-Requiere SDK .NET 10.0.302 o compatible según `global.json`.
+Requiere cualquier SDK .NET 10 (10.0.100 o superior); `global.json` acepta versiones menores y parches posteriores.
 
 ```powershell
 dotnet test PokemonTwo.slnx -c Release --filter 'Category!=Postgres'
