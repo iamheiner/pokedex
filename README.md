@@ -6,66 +6,63 @@ He mantenido los tres ejercicios en la misma solución porque se apoyan entre s�
 
 No hace falta conocer el juego para probarla. Un **Pokémon** es un participante con nivel, salud y estadísticas. Un **movimiento** es un ataque que puede utilizar. El **tipo**, como fuego o agua, determina si ese ataque resulta más o menos eficaz contra el rival.
 
-## Poner el proyecto en marcha
+## Inicializar el proyecto y empezar a probar
 
 ### Requisitos
 
-- Git y Docker con contenedores Linux. En Windows, Docker Desktop debe estar iniciado.
-- PowerShell 7 para ejecutar los ejemplos y los scripts de comprobación.
-- El SDK de .NET 10 solo es necesario si quieres ejecutar la API o las pruebas fuera de Docker.
+Necesitas Docker iniciado con contenedores Linux y una terminal PowerShell 7. El SDK de .NET 10 solo hace falta para ejecutar la API o las pruebas fuera de Docker.
 
-Todos los comandos siguientes se ejecutan desde la raíz del repositorio. Los bloques de PowerShell comparten las variables de la misma terminal.
+### 1. Abrir el proyecto e inicializarlo
 
-```powershell
-git clone https://github.com/iamheiner/pokedex.git
-cd pokedex
-```
-
-Si ya tienes el proyecto descargado, abre una terminal en su carpeta y continúa aquí:
+Abre una terminal en la carpeta que contiene `PokemonTwo.slnx`. Si acabas de descargar o abrir el proyecto en tu editor, ejecuta:
 
 ```powershell
-$env:POKEMON_API_PORT = '5080'
-$env:KEYCLOAK_PORT = '18080'
-$env:ASPIRE_DASHBOARD_PORT = '18888'
-$api = "http://localhost:$env:POKEMON_API_PORT"
-
-docker compose up --build -d --wait
+. ./scripts/initialize.ps1
 ```
 
-Si el puerto 5080 está ocupado, cambia `POKEMON_API_PORT` antes de arrancar, por ejemplo a `51966`. Los ejemplos seguirán usando `$api`. El puerto de la API también se utiliza al configurar el retorno del login de Scalar: si ya habías inicializado Keycloak con otro puerto, revisa [la configuración de autenticación](docs/autenticacion.md).
+El punto y el espacio iniciales son parte del comando: permiten que la URL `$api` y la función de autenticación queden disponibles en esa misma terminal para los ejemplos siguientes.
 
-Compose levanta la API, PostgreSQL para los datos de la aplicación, Keycloak con su propia base de datos y el dashboard de Aspire. Al iniciar, la API aplica las migraciones e inserta el catálogo de ejemplo si el esquema todavía no existe.
+El script prepara el entorno completo:
 
-Comprueba que ha terminado de arrancar:
+1. Comprueba que Docker está disponible con contenedores Linux.
+2. Configura los puertos y carga la autenticación de la sesión.
+3. Construye la API y levanta PostgreSQL, Keycloak y Aspire mediante Compose.
+4. Espera a que la API esté preparada y ejecuta una consulta autenticada.
+5. Muestra las direcciones de los servicios cuando el proyecto está listo para probar.
+
+**La inicialización de los datos la hace la aplicación al arrancar.** Aplica las migraciones y, en una base nueva, carga cinco especies, cinco ejemplares con cuatro movimientos cada uno y 21 movimientos. Keycloak importa el realm de demostración con su usuario y sus clientes. No necesitas ejecutar SQL ni crear esos datos manualmente.
+
+El script se puede repetir: conserva los volúmenes, las partidas y las modificaciones de la Pokédex. Al abrir otra terminal, vuelve a ejecutarlo para preparar esa sesión. Si ya utilizas otros puertos, indica los mismos valores; no cambies el puerto del login de un Keycloak ya inicializado sin revisar [autenticación](docs/autenticacion.md).
+
+Por defecto la API usa el puerto 5080. Para utilizar, por ejemplo, el 51966:
 
 ```powershell
-$ready = $false
-foreach ($attempt in 1..60) {
-    try {
-        $response = Invoke-WebRequest "$api/health/ready" -TimeoutSec 3
-        if ($response.StatusCode -eq 200) { $ready = $true; break }
-    } catch { }
-    Start-Sleep -Seconds 1
-}
-if (-not $ready) { throw 'La API no está preparada. Revisa: docker compose logs --tail 50 api' }
+. ./scripts/initialize.ps1 -ApiPort 51966
 ```
 
-| Servicio | Dirección con los puertos anteriores |
+También admite `-KeycloakPort` y `-DashboardPort`. Si las variables de puertos ya están definidas en la terminal, las utiliza como valores predeterminados. Las credenciales del cliente se obtienen de la configuración de Compose, incluidas las personalizaciones mediante `.env`.
+
+### 2. Comprobar que ya puedes usar la API
+
+Cuando aparezca `Proyecto preparado`, prueba esta consulta en la misma terminal:
+
+```powershell
+Invoke-RestMethod "$api/species?limit=1" -Headers (Get-PokemonAuthorizationHeaders)
+```
+
+Debe devolver una especie del catálogo inicial. Ya puedes ejecutar los ejemplos de los tres ejercicios usando `$api`; la función solicita un token al preparar cada petición.
+
+Para probar desde el navegador, abre la dirección de Scalar que muestra el script. Con los puertos predeterminados:
+
+| Servicio | Dirección |
 | --- | --- |
-| Scalar, para probar la API desde el navegador | `http://localhost:5080/scalar/v1` |
+| Scalar | `http://localhost:5080/scalar/v1` |
 | Keycloak | `http://localhost:18080` |
-| Aspire, para consultar trazas, logs y métricas | `http://localhost:18888` |
+| Aspire | `http://localhost:18888` |
 
-Abre Scalar e inicia sesión con el usuario `trainer` y la contraseña `trainer_local_only`. Son credenciales de demostración para el entorno local.
+En Scalar, inicia sesión con `trainer` y `trainer_local_only`. Son credenciales de demostración local; si las has personalizado, utiliza tus valores.
 
-Para llamar a la API desde los ejemplos de este README, prepara también la autenticación de la terminal:
-
-```powershell
-$env:POKEMON_CLIENT_SECRET = 'pokemon_client_local_only'
-. ./scripts/authentication.ps1
-```
-
-`Get-PokemonAuthorizationHeaders` obtiene un token para el cliente `pokemon-tools`. Cada ejemplo solicita sus cabeceras al ejecutarse, de modo que no depende de un token copiado manualmente. Los ejemplos presuponen las credenciales predeterminadas de Compose; si las cambiaste, utiliza tus valores. Las opciones están en [autenticación](docs/autenticacion.md).
+El arranque completo está en [scripts/initialize.ps1](scripts/initialize.ps1). La carga de datos iniciales solo ocurre al crear el esquema: si has modificado o eliminado registros, volver a inicializar conserva esos cambios. Los ejemplos con identificadores fijos presuponen que mantienes los ejemplares de demostración.
 
 ## Ejercicio 1. Cálculo de daño
 
