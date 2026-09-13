@@ -16,7 +16,7 @@ Pokemon.Api/Feature/Pokedex/Moves/
     GetSpeciesSharingMoveEndpoint.cs
 ```
 
-Cada clase de operación contiene dos métodos, separados y documentados con un resumen XML:
+Cada clase de operación contiene dos métodos separados. Los comentarios se reservan para decisiones, reglas o comportamientos que no resulten evidentes al leer el código. Los resúmenes XML utilizan tres líneas: apertura de `<summary>`, descripción y cierre de `</summary>`.
 
 - `Map`: registra la ruta, las respuestas HTTP, el resumen, la descripción y los ejemplos de OpenAPI que correspondan.
 - `HandleAsync`: recibe los datos HTTP, envía el Command o Query mediante `ISender` y construye la respuesta HTTP.

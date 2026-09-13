@@ -19,7 +19,9 @@ public sealed class Battle
         : First.Snapshot.CurrentHealth > 0 ? First.Snapshot.Id : Second.Snapshot.Id;
     public bool IsDraw => First.Snapshot.CurrentHealth == 0 && Second.Snapshot.CurrentHealth == 0;
 
-    /// <summary>Construye el estado inmutable de la partida y elimina el siguiente actor si el combate ha terminado.</summary>
+    /// <summary>
+    /// Construye el estado inmutable de la partida y elimina el siguiente actor si el combate ha terminado.
+    /// </summary>
     private Battle(Guid id, BattlePokemon first, BattlePokemon second, Guid? nextPokemonId, IEnumerable<BattleTurn> turns)
     {
         Id = id; First = first; Second = second;
@@ -27,7 +29,9 @@ public sealed class Battle
         NextPokemonId = Phase == BattlePhase.Finished ? null : nextPokemonId;
     }
 
-    /// <summary>Exige dos ejemplares distintos con salud. En empate de velocidad empieza First.</summary>
+    /// <summary>
+    /// Exige dos ejemplares distintos con salud. En empate de velocidad empieza First.
+    /// </summary>
     public static Battle Start(Guid id, BattlePokemon first, BattlePokemon second)
     {
         ArgumentNullException.ThrowIfNull(first);

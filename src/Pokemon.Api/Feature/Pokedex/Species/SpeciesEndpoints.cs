@@ -3,10 +3,11 @@ using Pokemon.Api.Feature.Pokedex.Species.Queries;
 
 namespace Pokemon.Api.Feature.Pokedex.Species;
 
-/// <summary>Agrupa las rutas del recurso species y sus contratos de error comunes.</summary>
+/// <summary>
+/// Agrupa las rutas del recurso species y sus contratos de error comunes.
+/// </summary>
 public static class SpeciesEndpoints
 {
-    /// <summary>Registra las consultas y comandos HTTP del recurso species.</summary>
     public static void MapSpeciesEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/species").WithTags("Pokedex - Species")

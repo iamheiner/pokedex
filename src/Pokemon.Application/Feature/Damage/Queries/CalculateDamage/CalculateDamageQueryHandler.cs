@@ -20,7 +20,9 @@ namespace Pokemon.Application.Feature.Damage.Queries.CalculateDamage;
 public sealed class CalculateDamageQueryHandler(IDamageRandom random)
     : IRequestHandler<CalculateDamageQuery, DamageResult>
 {
-    /// <summary>Procesa la petición y devuelve el daño, la efectividad y el factor utilizado.</summary>
+    /// <summary>
+    /// Procesa la petición y devuelve el daño, la efectividad y el factor utilizado.
+    /// </summary>
     /// <param name="request">Atacante, nombre del movimiento y defensor del cálculo.</param>
     /// <param name="cancellationToken">Permite cancelar antes de iniciar el cálculo.</param>
     /// <exception cref="InvalidDamageRequestException">Falta el nombre o el movimiento no está aprendido.</exception>

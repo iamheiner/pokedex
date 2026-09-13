@@ -7,10 +7,14 @@ namespace Pokemon.Application.Feature.Pokedex.Queries.GetPokemonSharingMove;
 
 public sealed record GetPokemonSharingMoveQuery(Guid Id, int Offset = 0, int Limit = 100) : IQuery<IReadOnlyList<PokemonView>>;
 
-/// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
+/// <summary>
+/// Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.
+/// </summary>
 public sealed class GetPokemonSharingMoveQueryHandler(IReadSession reader) : IRequestHandler<GetPokemonSharingMoveQuery, IReadOnlyList<PokemonView>>
 {
-    /// <summary>Devuelve una página de ejemplares que tienen aprendido el movimiento solicitado.</summary>
+    /// <summary>
+    /// Devuelve una página de ejemplares que tienen aprendido el movimiento solicitado.
+    /// </summary>
     public Task<IReadOnlyList<PokemonView>> Handle(GetPokemonSharingMoveQuery request, CancellationToken token) =>
         reader.ReadAsync<IReadOnlyList<PokemonView>>(async data =>
         {

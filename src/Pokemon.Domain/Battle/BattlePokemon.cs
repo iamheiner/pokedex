@@ -9,7 +9,9 @@ public sealed class BattlePokemon
 {
     public Combatant Snapshot { get; }
     public IReadOnlyList<BattleMove> Moves { get; }
-    /// <summary>Construye un participante y exige cuatro movimientos distintos que coincidan con su instantánea.</summary>
+    /// <summary>
+    /// Construye un participante y exige cuatro movimientos distintos que coincidan con su instantánea.
+    /// </summary>
     public BattlePokemon(Combatant snapshot, IEnumerable<BattleMove> moves)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -21,7 +23,9 @@ public sealed class BattlePokemon
         Snapshot = snapshot; Moves = Array.AsReadOnly(copy);
     }
 
-    /// <summary>Devuelve el participante con la salud reducida y el uso del movimiento seleccionado consumido.</summary>
+    /// <summary>
+    /// Devuelve el participante con la salud reducida y el uso del movimiento seleccionado consumido.
+    /// </summary>
     internal BattlePokemon Apply(int damage, Guid? spentMove)
     {
         var p = Snapshot;

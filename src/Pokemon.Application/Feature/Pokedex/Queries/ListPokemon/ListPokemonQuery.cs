@@ -7,10 +7,14 @@ namespace Pokemon.Application.Feature.Pokedex.Queries.ListPokemon;
 
 public sealed record ListPokemonQuery(int Offset = 0, int Limit = 100) : IQuery<IReadOnlyList<PokemonView>>;
 
-/// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
+/// <summary>
+/// Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.
+/// </summary>
 public sealed class ListPokemonQueryHandler(IReadSession reader) : IRequestHandler<ListPokemonQuery, IReadOnlyList<PokemonView>>
 {
-    /// <summary>Devuelve la página solicitada de ejemplares con sus especies y movimientos.</summary>
+    /// <summary>
+    /// Devuelve la página solicitada de ejemplares con sus especies y movimientos.
+    /// </summary>
     public Task<IReadOnlyList<PokemonView>> Handle(ListPokemonQuery request, CancellationToken token) =>
         reader.ReadAsync<IReadOnlyList<PokemonView>>(async data =>
         {

@@ -10,22 +10,30 @@ namespace Pokemon.Tests.Pokedex;
 public sealed class PokedexDomainTests
 {
     private static readonly BaseStats Stats = new(40, 50, 60, 70, 80, 90);
-    /// <summary>Construye una especie de prueba con cinco movimientos aprendibles a niveles consecutivos.</summary>
+    /// <summary>
+    /// Construye una especie de prueba con cinco movimientos aprendibles a niveles consecutivos.
+    /// </summary>
     private static Species Species() => new(Guid.NewGuid(), "Species", PokemonType.Fire, Stats,
         Enumerable.Range(1, 5).Select(i => new LearnableMove(Guid.NewGuid(), i)));
 
-    /// <summary>Comprueba que el dominio rechaza potencias de movimiento fuera del intervalo permitido.</summary>
+    /// <summary>
+    /// Comprueba que el dominio rechaza potencias de movimiento fuera del intervalo permitido.
+    /// </summary>
     [Theory]
     [InlineData(0)]
     [InlineData(251)]
     [InlineData(-1)]
     public void InvalidMovePowerCannotEnterDomain(int power) => Assert.Throws<PokedexRuleException>(() => new CatalogMove(Guid.NewGuid(), "Move", power, PokemonType.Fire));
-    /// <summary>Comprueba que el dominio rechaza niveles de aprendizaje fuera del intervalo permitido.</summary>
+    /// <summary>
+    /// Comprueba que el dominio rechaza niveles de aprendizaje fuera del intervalo permitido.
+    /// </summary>
     [Theory]
     [InlineData(0)]
     [InlineData(101)]
     public void InvalidLearningLevelCannotEnterDomain(int level) => Assert.Throws<PokedexRuleException>(() => new LearnableMove(Guid.NewGuid(), level));
-    /// <summary>Comprueba que cada estadística base respeta los límites del dominio.</summary>
+    /// <summary>
+    /// Comprueba que cada estadística base respeta los límites del dominio.
+    /// </summary>
     [Theory]
     [InlineData(0)]
     [InlineData(10001)]
@@ -37,7 +45,9 @@ public sealed class PokedexDomainTests
             Assert.Throws<PokedexRuleException>(() => new BaseStats(values[0], values[1], values[2], values[3], values[4], values[5]));
         }
     }
-    /// <summary>Comprueba que las entidades rechazan identidades, nombres, tipos y planes de aprendizaje inválidos.</summary>
+    /// <summary>
+    /// Comprueba que las entidades rechazan identidades, nombres, tipos y planes de aprendizaje inválidos.
+    /// </summary>
     [Fact]
     public void DomainRejectsMissingIdentityNameTypeAndDuplicateLearning()
     {
@@ -47,7 +57,9 @@ public sealed class PokedexDomainTests
         var move = new LearnableMove(Guid.NewGuid(), 1);
         Assert.Throws<PokedexRuleException>(() => new Species(Guid.NewGuid(), "Species", PokemonType.Fire, Stats, [move, move]));
     }
-    /// <summary>Comprueba que el dominio copia y protege sus colecciones frente a modificaciones externas.</summary>
+    /// <summary>
+    /// Comprueba que el dominio copia y protege sus colecciones frente a modificaciones externas.
+    /// </summary>
     [Fact]
     public void CollectionsAreCopiedAndReadOnly()
     {
@@ -62,7 +74,9 @@ public sealed class PokedexDomainTests
         Assert.Throws<NotSupportedException>(() => ((IList<Guid>)pokemon.MoveIds).Clear());
         Assert.Throws<NotSupportedException>(() => ((IList<LearnableMove>)copy.Learnset).Clear());
     }
-    /// <summary>Comprueba que los comandos fallidos o cancelados no publican cambios parciales.</summary>
+    /// <summary>
+    /// Comprueba que los comandos fallidos o cancelados no publican cambios parciales.
+    /// </summary>
     [Fact]
     public async Task FailedAndCancelledTransactionsNeverPublishPartialChanges()
     {
@@ -76,7 +90,9 @@ public sealed class PokedexDomainTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.ReadAsync(async data => { called = true; return await data.GetReader<IMoveReader>().ListAsync(new(), default); }, cts.Token));
         Assert.False(called);
     }
-    /// <summary>Comprueba que conservar referencias a sesiones terminadas no permite modificar el estado publicado.</summary>
+    /// <summary>
+    /// Comprueba que conservar referencias a sesiones terminadas no permite modificar el estado publicado.
+    /// </summary>
     [Fact]
     public async Task EscapedSessionAndReaderCannotMutatePublishedState()
     {

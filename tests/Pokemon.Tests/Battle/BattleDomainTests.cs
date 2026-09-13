@@ -8,7 +8,9 @@ namespace Pokemon.Tests.Battle;
 
 public sealed class BattleDomainTests
 {
-    /// <summary>Construye un participante de prueba con cuatro movimientos y estadísticas configurables.</summary>
+    /// <summary>
+    /// Construye un participante de prueba con cuatro movimientos y estadísticas configurables.
+    /// </summary>
     internal static BattlePokemon Fighter(int speed = 50, int health = 100, int total = 100,
         PokemonType type = PokemonType.Normal, PokemonType moveType = PokemonType.Normal,
         int level = 50, int attack = 100, int defense = 100, int power = 100)
@@ -17,18 +19,24 @@ public sealed class BattleDomainTests
         var snapshot = new Combatant(Guid.NewGuid(), "Fighter", level, type, health, total, attack, defense, 100, 100, speed, moves.Select(m => m.Definition));
         return new(snapshot, moves);
     }
-    /// <summary>Crea una partida entre dos participantes de tipo Ghost con la salud indicada.</summary>
+    /// <summary>
+    /// Crea una partida entre dos participantes de tipo Ghost con la salud indicada.
+    /// </summary>
     internal static BattleAggregate Duel(int health = 100, int total = 100) =>
         BattleAggregate.Start(Guid.NewGuid(), Fighter(health: health, total: total, type: PokemonType.Ghost),
             Fighter(health: health, total: total, type: PokemonType.Ghost));
-    /// <summary>Resuelve el siguiente turno usando un movimiento disponible o esfuerzo si todos están agotados.</summary>
+    /// <summary>
+    /// Resuelve el siguiente turno usando un movimiento disponible o esfuerzo si todos están agotados.
+    /// </summary>
     internal static BattleAggregate Next(BattleAggregate battle)
     {
         var actor = battle.NextPokemonId == battle.First.Snapshot.Id ? battle.First : battle.Second;
         return battle.PlayTurn(actor.Snapshot.Id, actor.Moves.FirstOrDefault(m => m.RemainingUses > 0)?.Id, battle.Version, 100);
     }
 
-    /// <summary>Comprueba que la velocidad decide el primer actor y que el orden de entrada resuelve los empates.</summary>
+    /// <summary>
+    /// Comprueba que la velocidad decide el primer actor y que el orden de entrada resuelve los empates.
+    /// </summary>
     [Theory]
     [InlineData(40, 80, false)]
     [InlineData(80, 40, true)]
@@ -41,7 +49,9 @@ public sealed class BattleDomainTests
         Assert.Equal(1, battle.Version); Assert.Empty(battle.Turns); Assert.Null(battle.WinnerId);
         Assert.Equal(BattlePhase.AwaitingAction, battle.Phase);
     }
-    /// <summary>Comprueba que no se crean partidas con identidades inválidas, participantes iguales o salud agotada.</summary>
+    /// <summary>
+    /// Comprueba que no se crean partidas con identidades inválidas, participantes iguales o salud agotada.
+    /// </summary>
     [Fact]
     public void CreationRejectsSamePokemonMissingIdentityAndFaintedParticipants()
     {
@@ -53,7 +63,9 @@ public sealed class BattleDomainTests
         Assert.Throws<ArgumentNullException>(() => BattleAggregate.Start(Guid.NewGuid(), null!, fighter));
         Assert.Throws<ArgumentNullException>(() => BattleAggregate.Start(Guid.NewGuid(), fighter, null!));
     }
-    /// <summary>Comprueba que un turno normal reutiliza la fórmula de daño y produce una nueva versión inmutable.</summary>
+    /// <summary>
+    /// Comprueba que un turno normal reutiliza la fórmula de daño y produce una nueva versión inmutable.
+    /// </summary>
     [Fact]
     public void NormalTurnReusesMoveTypeFormulaAndAdvancesOnlyItsOwnState()
     {
@@ -70,7 +82,9 @@ public sealed class BattleDomainTests
         Assert.Equal(100, battle.Second.Snapshot.CurrentHealth); Assert.Equal(5, battle.First.Moves[0].RemainingUses);
         Assert.Empty(battle.Turns);
     }
-    /// <summary>Comprueba que el daño letal se limita a la salud restante y termina la partida antes de otro turno.</summary>
+    /// <summary>
+    /// Comprueba que el daño letal se limita a la salud restante y termina la partida antes de otro turno.
+    /// </summary>
     [Fact]
     public void LethalDamageIsClampedAndFinishesBeforeOpponentCanAct()
     {
@@ -82,7 +96,9 @@ public sealed class BattleDomainTests
         Assert.Null(finished.NextPokemonId); Assert.False(finished.IsDraw); Assert.Equal(BattlePhase.Finished, finished.Phase);
         Assert.Throws<BattleConflictException>(() => finished.PlayTurn(second.Snapshot.Id, second.Moves[0].Id, finished.Version, 100));
     }
-    /// <summary>Comprueba que se rechazan actores, movimientos, versiones y usos de esfuerzo incompatibles con el turno.</summary>
+    /// <summary>
+    /// Comprueba que se rechazan actores, movimientos, versiones y usos de esfuerzo incompatibles con el turno.
+    /// </summary>
     [Fact]
     public void InvalidActorMoveVersionAndPrematureStruggleAreRejected()
     {
@@ -94,7 +110,9 @@ public sealed class BattleDomainTests
         Assert.Throws<BattleConflictException>(() => battle.PlayTurn(actor.Snapshot.Id, null, 1, 100));
         Assert.Empty(battle.Turns);
     }
-    /// <summary>Comprueba que un factor aleatorio inválido se trata como un fallo interno del cálculo.</summary>
+    /// <summary>
+    /// Comprueba que un factor aleatorio inválido se trata como un fallo interno del cálculo.
+    /// </summary>
     [Theory]
     [InlineData(84)]
     [InlineData(101)]
@@ -104,7 +122,9 @@ public sealed class BattleDomainTests
         Assert.Throws<ArgumentOutOfRangeException>(() => battle.PlayTurn(battle.First.Snapshot.Id, battle.First.Moves[0].Id, 1, factor));
         Assert.Equal(1, battle.Version);
     }
-    /// <summary>Comprueba que una inmunidad consume usos y que un movimiento agotado deja de estar disponible.</summary>
+    /// <summary>
+    /// Comprueba que una inmunidad consume usos y que un movimiento agotado deja de estar disponible.
+    /// </summary>
     [Fact]
     public void ImmunityStillConsumesUsesAndExhaustedMoveCannotBeSelected()
     {
@@ -115,7 +135,9 @@ public sealed class BattleDomainTests
         Assert.Throws<BattleConflictException>(() => battle.PlayTurn(battle.First.Snapshot.Id, battle.First.Moves[0].Id, battle.Version, 100));
         Assert.Throws<BattleRuleException>(() => BattleAggregate.Start(Guid.NewGuid(), battle.First, Fighter()));
     }
-    /// <summary>Comprueba que los combates con inmunidad mutua terminan incluso en los límites de redondeo.</summary>
+    /// <summary>
+    /// Comprueba que los combates con inmunidad mutua terminan incluso en los límites de redondeo.
+    /// </summary>
     [Theory]
     [InlineData(1)]
     [InlineData(9)]
@@ -136,7 +158,9 @@ public sealed class BattleDomainTests
         });
         Assert.Equal(0, battle.First.Snapshot.CurrentHealth); Assert.Equal(0, battle.Second.Snapshot.CurrentHealth);
     }
-    /// <summary>Comprueba que el daño redondeado a cero no impide terminar el combate mediante esfuerzo.</summary>
+    /// <summary>
+    /// Comprueba que el daño redondeado a cero no impide terminar el combate mediante esfuerzo.
+    /// </summary>
     [Fact]
     public void ZeroDamageFromRoundingAlsoEndsViaStruggle()
     {
@@ -147,7 +171,9 @@ public sealed class BattleDomainTests
         Assert.True(battle.IsDraw); Assert.Equal(1, battle.Turns[^1].AppliedDamage);
         Assert.All(battle.Turns.Take(40), t => { Assert.Equal(0, t.AppliedDamage); Assert.Equal(1m, t.Effectiveness); });
     }
-    /// <summary>Comprueba que esfuerzo puede provocar victoria por daño o derrota por retroceso.</summary>
+    /// <summary>
+    /// Comprueba que esfuerzo puede provocar victoria por daño o derrota por retroceso.
+    /// </summary>
     [Theory]
     [InlineData(1, 100, false)]
     [InlineData(100, 1, true)]
@@ -158,7 +184,9 @@ public sealed class BattleDomainTests
         Assert.Equal(firstWins ? battle.First.Snapshot.Id : battle.Second.Snapshot.Id, battle.WinnerId);
         Assert.False(battle.IsDraw);
     }
-    /// <summary>Comprueba que historial y movimientos son inmutables y que se rechazan instantáneas incompatibles.</summary>
+    /// <summary>
+    /// Comprueba que historial y movimientos son inmutables y que se rechazan instantáneas incompatibles.
+    /// </summary>
     [Fact]
     public void HistoryAndMovesAreReadOnlyAndMismatchedSnapshotsAreRejected()
     {
@@ -169,7 +197,9 @@ public sealed class BattleDomainTests
         Assert.Throws<BattleRuleException>(() => new BattlePokemon(battle.First.Snapshot, Fighter().Moves.Select(m => new BattleMove(m.Id, new Move("Other", 10, PokemonType.Normal)))));
         Assert.Throws<BattleRuleException>(() => new BattleMove(Guid.Empty, new Move("Move", 10, PokemonType.Normal)));
     }
-    /// <summary>Comprueba que fallos, cancelaciones y avances de versión inválidos no modifican la partida almacenada.</summary>
+    /// <summary>
+    /// Comprueba que fallos, cancelaciones y avances de versión inválidos no modifican la partida almacenada.
+    /// </summary>
     [Fact]
     public async Task StoreRollsBackExceptionsCancellationAndInvalidVersionAdvances()
     {

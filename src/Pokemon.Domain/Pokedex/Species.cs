@@ -12,7 +12,9 @@ public sealed class Species
     public BaseStats Stats { get; }
     public IReadOnlyList<LearnableMove> Learnset { get; }
 
-    /// <summary>Construye una especie validando sus estadísticas y un plan de aprendizaje sin movimientos duplicados.</summary>
+    /// <summary>
+    /// Construye una especie validando sus estadísticas y un plan de aprendizaje sin movimientos duplicados.
+    /// </summary>
     public Species(Guid id, string name, PokemonType type, BaseStats stats, IEnumerable<LearnableMove> learnset)
     {
         PokedexGuard.Identity(id);
@@ -25,6 +27,8 @@ public sealed class Species
         Learnset = Array.AsReadOnly(entries);
     }
 
-    /// <summary>El permiso depende de la especie y el nivel, nunca de coincidir en tipo.</summary>
+    /// <summary>
+    /// El permiso depende de la especie y el nivel, nunca de coincidir en tipo.
+    /// </summary>
     public bool CanLearn(Guid moveId, int level) => Learnset.Any(e => e.MoveId == moveId && e.Level <= level);
 }

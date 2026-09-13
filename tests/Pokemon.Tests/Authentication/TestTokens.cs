@@ -20,7 +20,9 @@ internal static class TestTokens
     public const string Issuer = "https://identity.test/realms/pokemon";
     private static readonly RsaSecurityKey Key = new(RSA.Create(2048)) { KeyId = "tests" };
 
-    /// <summary>Configura metadatos y claves locales para validar tokens y OIDC sin contactar con un servidor externo.</summary>
+    /// <summary>
+    /// Configura metadatos y claves locales para validar tokens y OIDC sin contactar con un servidor externo.
+    /// </summary>
     public static void Configure(IWebHostBuilder builder)
     {
         builder.UseSetting("Authentication:Authority", Issuer);
@@ -44,7 +46,9 @@ internal static class TestTokens
             }));
     }
 
-    /// <summary>Genera un JWT de prueba con parámetros que permiten simular credenciales válidas e inválidas.</summary>
+    /// <summary>
+    /// Genera un JWT de prueba con parámetros que permiten simular credenciales válidas e inválidas.
+    /// </summary>
     public static string Create(string issuer = Issuer, string audience = "pokemon-api", bool expired = false, bool wrongKey = false, bool unsigned = false, bool noExpiration = false, bool future = false, string algorithm = SecurityAlgorithms.RsaSha256)
     {
         var now = DateTime.UtcNow;
@@ -55,7 +59,9 @@ internal static class TestTokens
             unsigned ? null : new SigningCredentials(key, algorithm)));
     }
 
-    /// <summary>Añade un token Bearer válido a las cabeceras del cliente HTTP de pruebas.</summary>
+    /// <summary>
+    /// Añade un token Bearer válido a las cabeceras del cliente HTTP de pruebas.
+    /// </summary>
     public static void Authorize(HttpClient client) =>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Create());
 }

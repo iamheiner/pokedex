@@ -5,10 +5,11 @@ using System.Text.Json;
 
 namespace Pokemon.Api.Feature.Battle.Commands;
 
-/// <summary>Inicia una partida entre dos ejemplares de la Pokédex.</summary>
+/// <summary>
+/// Inicia una partida entre dos ejemplares de la Pokédex.
+/// </summary>
 internal static class CreateBattleEndpoint
 {
-    /// <summary>Registra la ruta HTTP, sus respuestas y los metadatos de OpenAPI.</summary>
     public static void Map(RouteGroupBuilder endpoints)
     {
         endpoints.MapPost("/", HandleAsync)
@@ -25,8 +26,6 @@ internal static class CreateBattleEndpoint
                 return Task.CompletedTask;
             });
     }
-
-    /// <summary>Inicia una partida entre dos ejemplares de la Pokédex mediante el caso de uso de Application.</summary>
     private static async Task<IResult> HandleAsync(CreateBattleInput input, ISender sender, CancellationToken token)
     {
         var battle = await sender.Send(new CreateBattleCommand(input), token);

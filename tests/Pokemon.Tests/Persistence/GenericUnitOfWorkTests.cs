@@ -15,7 +15,9 @@ public sealed class GenericUnitOfWorkTests
     private interface IProbeWriter : IWriteRepository;
     private sealed class ProbeRepository : IProbeReader, IProbeWriter;
 
-    /// <summary>Comprueba la creación diferida, la reutilización por operación y la extensión del registro de repositorios.</summary>
+    /// <summary>
+    /// Comprueba la creación diferida, la reutilización por operación y la extensión del registro de repositorios.
+    /// </summary>
     [PostgresFact]
     public async Task Repositories_are_lazy_reused_within_operation_and_extensible_by_registration()
     {
@@ -43,7 +45,9 @@ public sealed class GenericUnitOfWorkTests
         }, default);
     }
 
-    /// <summary>Comprueba que los cambios de catálogo y partida se confirman o revierten en una misma transacción.</summary>
+    /// <summary>
+    /// Comprueba que los cambios de catálogo y partida se confirman o revierten en una misma transacción.
+    /// </summary>
     [PostgresFact]
     public async Task Catalog_and_battle_commit_or_roll_back_in_the_same_transaction()
     {
@@ -79,7 +83,9 @@ public sealed class GenericUnitOfWorkTests
         }
     }
 
-    /// <summary>Comprueba que una sesión de lectura rechaza escritores y que una sesión cerrada no resuelve repositorios.</summary>
+    /// <summary>
+    /// Comprueba que una sesión de lectura rechaza escritores y que una sesión cerrada no resuelve repositorios.
+    /// </summary>
     [PostgresFact]
     public async Task Read_scope_cannot_resolve_writers_even_after_explicit_cast_and_closed_scope_rejects_resolution()
     {

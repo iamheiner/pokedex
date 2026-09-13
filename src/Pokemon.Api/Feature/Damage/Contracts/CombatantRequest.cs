@@ -8,11 +8,16 @@ public sealed record CombatantRequest(Guid Id, string Name, int Level, PokemonTy
     int CurrentHealth, int TotalHealth, int Attack, int Defense, int SpecialAttack,
     int SpecialDefense, int Speed, MoveRequest[] Moves)
 {
-    /// <summary>Convierte los datos HTTP del participante a un Combatant validado por el dominio.</summary>
+    /// <summary>
+    /// Convierte los datos HTTP del participante a un Combatant validado por el dominio.
+    /// </summary>
     public Combatant ToDomain()
     {
         ArgumentNullException.ThrowIfNull(Moves);
-        if (Moves.Any(m => m is null)) throw new ArgumentException("Moves cannot contain null entries.");
+
+        if (Moves.Any(m => m is null)) 
+            throw new ArgumentException("Moves cannot contain null entries.");
+
         return new Combatant(id: Id, name: Name, level: Level, type: Type,
             currentHealth: CurrentHealth, totalHealth: TotalHealth, attack: Attack, defense: Defense,
             specialAttack: SpecialAttack, specialDefense: SpecialDefense, speed: Speed,

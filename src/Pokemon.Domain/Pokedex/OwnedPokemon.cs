@@ -14,7 +14,9 @@ public sealed class OwnedPokemon
     public int TotalHealth { get; }
     public IReadOnlyList<Guid> MoveIds { get; }
 
-    /// <summary>Construye un ejemplar validando su salud, nivel y cuatro movimientos compatibles con la especie.</summary>
+    /// <summary>
+    /// Construye un ejemplar validando su salud, nivel y cuatro movimientos compatibles con la especie.
+    /// </summary>
     public OwnedPokemon(Guid id, Species species, string name, int level, int currentHealth, int totalHealth, IEnumerable<Guid> moveIds)
     {
         PokedexGuard.Identity(id);

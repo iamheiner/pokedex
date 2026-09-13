@@ -8,10 +8,14 @@ namespace Pokemon.Application.Feature.Pokedex.Commands.CreateSpecies;
 
 public sealed record CreateSpeciesCommand(SpeciesInput Data) : ICommand<SpeciesView>;
 
-/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+/// <summary>
+/// Coordina reglas y persistencia del agregado en una única transacción.
+/// </summary>
 public sealed class CreateSpeciesCommandHandler(IUnitOfWork transactions) : IRequestHandler<CreateSpeciesCommand, SpeciesView>
 {
-    /// <summary>Valida, guarda y devuelve una nueva especie dentro de una transacción.</summary>
+    /// <summary>
+    /// Valida, guarda y devuelve una nueva especie dentro de una transacción.
+    /// </summary>
     public Task<SpeciesView> Handle(CreateSpeciesCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

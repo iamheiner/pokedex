@@ -7,10 +7,14 @@ namespace Pokemon.Application.Feature.Pokedex.Queries.GetMove;
 
 public sealed record GetMoveQuery(Guid Id) : IQuery<MoveView>;
 
-/// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
+/// <summary>
+/// Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.
+/// </summary>
 public sealed class GetMoveQueryHandler(IReadSession reader) : IRequestHandler<GetMoveQuery, MoveView>
 {
-    /// <summary>Recupera el movimiento solicitado y proyecta sus datos de salida.</summary>
+    /// <summary>
+    /// Recupera el movimiento solicitado y proyecta sus datos de salida.
+    /// </summary>
     public Task<MoveView> Handle(GetMoveQuery request, CancellationToken token) =>
         reader.ReadAsync<MoveView>(async data =>
         {

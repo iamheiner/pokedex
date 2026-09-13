@@ -9,7 +9,9 @@ namespace Pokemon.Application.Feature.Battle;
 
 internal static class BattleMapping
 {
-    /// <summary>Captura todos los datos dentro de una misma lectura coherente de la Pokédex.</summary>
+    /// <summary>
+    /// Captura todos los datos dentro de una misma lectura coherente de la Pokédex.
+    /// </summary>
     public static async Task<BattlePokemon> SnapshotAsync(IReadRepositoryScope data, Guid id, CancellationToken token)
     {
         var owned = await data.GetReader<IOwnedPokemonReader>().FindAsync(id, token)
@@ -29,10 +31,14 @@ internal static class BattleMapping
         return new(pokemon, moves);
     }
 
-    /// <summary>Convierte el agregado de partida en una respuesta con participantes, versión, resultado e historial.</summary>
+    /// <summary>
+    /// Convierte el agregado de partida en una respuesta con participantes, versión, resultado e historial.
+    /// </summary>
     public static BattleView View(BattleAggregate battle) => new(battle.Id, battle.Version, battle.Phase,
         battle.NextPokemonId, battle.WinnerId, battle.IsDraw, View(battle.First), View(battle.Second), battle.Turns);
-    /// <summary>Proyecta el estado de un participante y los usos disponibles de sus movimientos.</summary>
+    /// <summary>
+    /// Proyecta el estado de un participante y los usos disponibles de sus movimientos.
+    /// </summary>
     private static BattlePokemonView View(BattlePokemon participant)
     {
         var p = participant.Snapshot;

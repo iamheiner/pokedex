@@ -1,6 +1,8 @@
 namespace Pokemon.Domain;
 
-/// <summary>Relaciona explícitamente el tipo del movimiento con el tipo del defensor.</summary>
+/// <summary>
+/// Relaciona explícitamente el tipo del movimiento con el tipo del defensor.
+/// </summary>
 public static class TypeEffectiveness
 {
     // Cada fila declara debilidades, resistencias e inmunidades del defensor.
@@ -29,7 +31,9 @@ public static class TypeEffectiveness
         [PokemonType.Fairy] = new([PokemonType.Fighting, PokemonType.Dragon, PokemonType.Dark], [PokemonType.Fire, PokemonType.Poison, PokemonType.Steel], []),
     };
 
-    /// <summary>Valida al inicializar que la tabla cubra todos los tipos sin combinaciones contradictorias.</summary>
+    /// <summary>
+    /// Valida al inicializar que la tabla cubra todos los tipos sin combinaciones contradictorias.
+    /// </summary>
     static TypeEffectiveness()
     {
         // Si se amplía el enum, una fila ausente o contradictoria falla explícitamente.
@@ -43,7 +47,9 @@ public static class TypeEffectiveness
         }
     }
 
-    /// <summary>Devuelve 0, 0,5, 1 o 2; compara movimiento y defensor.</summary>
+    /// <summary>
+    /// Devuelve 0, 0,5, 1 o 2; compara movimiento y defensor.
+    /// </summary>
     public static decimal Against(PokemonType moveType, PokemonType defenderType)
     {
         if (!Enum.IsDefined(moveType) || !Enum.IsDefined(defenderType))

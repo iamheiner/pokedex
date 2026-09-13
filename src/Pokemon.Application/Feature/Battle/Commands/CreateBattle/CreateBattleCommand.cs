@@ -11,11 +11,15 @@ namespace Pokemon.Application.Feature.Battle.Commands.CreateBattle;
 
 public sealed record CreateBattleCommand(CreateBattleInput Data) : ICommand<BattleView>;
 
-/// <summary>Crea una partida aislada a partir de dos ejemplares existentes, sin modificar la colección.</summary>
+/// <summary>
+/// Crea una partida aislada a partir de dos ejemplares existentes, sin modificar la colección.
+/// </summary>
 public sealed class CreateBattleCommandHandler(IUnitOfWork transactions)
     : IRequestHandler<CreateBattleCommand, BattleView>
 {
-    /// <summary>Crea y guarda una partida a partir de dos ejemplares dentro de una única unidad de trabajo.</summary>
+    /// <summary>
+    /// Crea y guarda una partida a partir de dos ejemplares dentro de una única unidad de trabajo.
+    /// </summary>
     public async Task<BattleView> Handle(CreateBattleCommand request, CancellationToken token)
     {
         var input = request.Data;

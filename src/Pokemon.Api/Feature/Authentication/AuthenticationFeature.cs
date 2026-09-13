@@ -10,7 +10,9 @@ namespace Pokemon.Api.Feature.Authentication;
 /// </summary>
 public static class AuthenticationFeature
 {
-    /// <summary>Configura la validación JWT y las políticas de autenticación de la API a partir de sus opciones.</summary>
+    /// <summary>
+    /// Configura la validación JWT y las políticas de autenticación de la API a partir de sus opciones.
+    /// </summary>
     public static IServiceCollection AddApiAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var authority = configuration["Authentication:Authority"];

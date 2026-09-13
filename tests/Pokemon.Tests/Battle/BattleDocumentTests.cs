@@ -8,7 +8,9 @@ namespace Pokemon.Tests.Battle;
 
 public sealed class BattleDocumentTests
 {
-    /// <summary>Comprueba la serialización de todos los estados de partida, incluido esfuerzo y empate.</summary>
+    /// <summary>
+    /// Comprueba la serialización de todos los estados de partida, incluido esfuerzo y empate.
+    /// </summary>
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -23,7 +25,9 @@ public sealed class BattleDocumentTests
         var restored = BattleDocumentCodec.Deserialize(BattleDocumentCodec.Serialize(battle));
         Assert.Equal(JsonSerializer.Serialize(battle), JsonSerializer.Serialize(restored));
     }
-    /// <summary>Comprueba que los documentos inconsistentes se rechazan como errores de almacenamiento.</summary>
+    /// <summary>
+    /// Comprueba que los documentos inconsistentes se rechazan como errores de almacenamiento.
+    /// </summary>
     [Theory]
     [InlineData("format")]
     [InlineData("version")]
@@ -46,7 +50,9 @@ public sealed class BattleDocumentTests
         }
         Assert.Throws<InvalidDataException>(() => BattleDocumentCodec.Deserialize(json.ToJsonString()));
     }
-    /// <summary>Comprueba que la reconstrucción conserva la salud inicial tras daño efectivo y retroceso.</summary>
+    /// <summary>
+    /// Comprueba que la reconstrucción conserva la salud inicial tras daño efectivo y retroceso.
+    /// </summary>
     [Fact]
     public void NonImmuneDamageAndRecoilPreserveInitialHealth()
     {

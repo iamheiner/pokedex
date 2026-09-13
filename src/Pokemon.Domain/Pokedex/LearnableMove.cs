@@ -1,11 +1,15 @@
 namespace Pokemon.Domain.Pokedex;
 
-/// <summary>Relación de aprendizaje: qué movimiento puede aprender una especie y desde qué nivel.</summary>
+/// <summary>
+/// Relación de aprendizaje: qué movimiento puede aprender una especie y desde qué nivel.
+/// </summary>
 public sealed record LearnableMove
 {
     public Guid MoveId { get; }
     public int Level { get; }
-    /// <summary>Define un movimiento aprendible validando su identidad y el nivel mínimo entre 1 y 100.</summary>
+    /// <summary>
+    /// Define un movimiento aprendible validando su identidad y el nivel mínimo entre 1 y 100.
+    /// </summary>
     public LearnableMove(Guid moveId, int level)
     {
         PokedexGuard.Identity(moveId);

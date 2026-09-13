@@ -8,10 +8,14 @@ namespace Pokemon.Application.Feature.Pokedex.Commands.UpdatePokemon;
 
 public sealed record UpdatePokemonCommand(Guid Id, PokemonInput Data) : ICommand<PokemonView>;
 
-/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+/// <summary>
+/// Coordina reglas y persistencia del agregado en una única transacción.
+/// </summary>
 public sealed class UpdatePokemonCommandHandler(IUnitOfWork transactions) : IRequestHandler<UpdatePokemonCommand, PokemonView>
 {
-    /// <summary>Valida y reemplaza los datos de un ejemplar existente dentro de una transacción.</summary>
+    /// <summary>
+    /// Valida y reemplaza los datos de un ejemplar existente dentro de una transacción.
+    /// </summary>
     public Task<PokemonView> Handle(UpdatePokemonCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

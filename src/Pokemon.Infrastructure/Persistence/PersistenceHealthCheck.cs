@@ -5,7 +5,9 @@ namespace Pokemon.Infrastructure.Persistence;
 
 internal sealed class PersistenceHealthCheck(DatabaseConnectionFactory connections) : IHealthCheck
 {
-    /// <summary>Comprueba la conexión y las versiones de los esquemas de partidas y Pokédex.</summary>
+    /// <summary>
+    /// Comprueba la conexión y las versiones de los esquemas de partidas y Pokédex.
+    /// </summary>
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken token = default)
     {
         try
@@ -19,6 +21,8 @@ internal sealed class PersistenceHealthCheck(DatabaseConnectionFactory connectio
             return ready ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy("Persistence schemas are not ready.");
         }
         catch (Exception error) when (error is NpgsqlException or TimeoutException)
-        { return HealthCheckResult.Unhealthy("Persistence is unavailable."); }
+        { 
+            return HealthCheckResult.Unhealthy("Persistence is unavailable."); 
+        }
     }
 }

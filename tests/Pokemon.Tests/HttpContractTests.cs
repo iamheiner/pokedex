@@ -16,10 +16,14 @@ namespace Pokemon.Tests;
 public sealed class HttpContractTests : IClassFixture<ApiFactory>
 {
     private readonly ApiFactory factory;
-    /// <summary>Conserva el host compartido que utilizarán las pruebas del contrato HTTP.</summary>
+    /// <summary>
+    /// Conserva el host compartido que utilizarán las pruebas del contrato HTTP.
+    /// </summary>
     public HttpContractTests(ApiFactory factory) => this.factory = factory;
 
-    /// <summary>Enumera los campos obligatorios del contrato HTTP de cálculo de daño.</summary>
+    /// <summary>
+    /// Enumera los campos obligatorios del contrato HTTP de cálculo de daño.
+    /// </summary>
     public static IEnumerable<object[]> RequiredFields()
     {
         yield return ["attacker"];
@@ -31,7 +35,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         foreach (var field in sample["attacker"]!["moves"]![0]!.AsObject()) yield return [$"attacker.moves.0.{field.Key}"];
     }
 
-    /// <summary>Comprueba que omitir cualquier campo obligatorio produce un error de validación.</summary>
+    /// <summary>
+    /// Comprueba que omitir cualquier campo obligatorio produce un error de validación.
+    /// </summary>
     [Theory]
     [MemberData(nameof(RequiredFields))]
     public async Task EveryContractFieldMustBePresent(string path)
@@ -41,14 +47,18 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que un JSON inválido devuelve un error en formato ProblemDetails.</summary>
+    /// <summary>
+    /// Comprueba que un JSON inválido devuelve un error en formato ProblemDetails.
+    /// </summary>
     [Theory]
     [InlineData("{")]
     [InlineData("null")]
     [InlineData("{}")]
     public Task InvalidJsonHasProblemDetails(string json) => AssertProblem(json, HttpStatusCode.BadRequest);
 
-    /// <summary>Comprueba que los valores de texto inválidos devuelven un error en formato ProblemDetails.</summary>
+    /// <summary>
+    /// Comprueba que los valores de texto inválidos devuelven un error en formato ProblemDetails.
+    /// </summary>
     [Theory]
     [InlineData("type", "Unknown")]
     [InlineData("name", "")]
@@ -59,7 +69,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que las referencias obligatorias no aceptan valores nulos.</summary>
+    /// <summary>
+    /// Comprueba que las referencias obligatorias no aceptan valores nulos.
+    /// </summary>
     [Theory]
     [InlineData("attacker")]
     [InlineData("defender")]
@@ -70,7 +82,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que un nombre de movimiento vacío devuelve un error de validación.</summary>
+    /// <summary>
+    /// Comprueba que un nombre de movimiento vacío devuelve un error de validación.
+    /// </summary>
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -80,7 +94,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que las propiedades JSON desconocidas se rechazan.</summary>
+    /// <summary>
+    /// Comprueba que las propiedades JSON desconocidas se rechazan.
+    /// </summary>
     [Fact]
     public async Task UnknownPropertyIsRejected()
     {
@@ -88,7 +104,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que un movimiento nulo en la petición HTTP se rechaza.</summary>
+    /// <summary>
+    /// Comprueba que un movimiento nulo en la petición HTTP se rechaza.
+    /// </summary>
     [Fact]
     public async Task NullMoveIsRejected()
     {
@@ -96,7 +114,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que los valores numéricos fuera de contrato se rechazan por HTTP.</summary>
+    /// <summary>
+    /// Comprueba que los valores numéricos fuera de contrato se rechazan por HTTP.
+    /// </summary>
     [Theory]
     [InlineData("level", 0)]
     [InlineData("level", 101)]
@@ -110,7 +130,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que enviar salud cero explícita es válido para el cálculo teórico de daño.</summary>
+    /// <summary>
+    /// Comprueba que enviar salud cero explícita es válido para el cálculo teórico de daño.
+    /// </summary>
     [Fact]
     public async Task ExplicitZeroHealthIsValidForTheoreticalDamage()
     {
@@ -120,7 +142,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    /// <summary>Comprueba que seleccionar un movimiento no aprendido devuelve ProblemDetails.</summary>
+    /// <summary>
+    /// Comprueba que seleccionar un movimiento no aprendido devuelve ProblemDetails.
+    /// </summary>
     [Fact]
     public async Task UnlearnedMoveHasProblemDetails()
     {
@@ -128,12 +152,16 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await AssertProblem(sample.ToJsonString(), HttpStatusCode.BadRequest);
     }
 
-    /// <summary>Comprueba que un tipo de contenido no admitido devuelve el error HTTP correspondiente.</summary>
+    /// <summary>
+    /// Comprueba que un tipo de contenido no admitido devuelve el error HTTP correspondiente.
+    /// </summary>
     [Fact]
     public async Task UnsupportedContentTypeHasProblemDetails() =>
         await AssertProblem(Sample().ToJsonString(), HttpStatusCode.UnsupportedMediaType, "text/plain");
 
-    /// <summary>Comprueba que un fallo del proveedor aleatorio se devuelve como error interno y no como validación del cliente.</summary>
+    /// <summary>
+    /// Comprueba que un fallo del proveedor aleatorio se devuelve como error interno y no como validación del cliente.
+    /// </summary>
     [Fact]
     public async Task InternalRandomFailureIs500NotClientError()
     {
@@ -147,7 +175,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.DoesNotContain("randomFactor", await response.Content.ReadAsStringAsync());
     }
 
-    /// <summary>Comprueba los seis ejemplos de daño a través del host HTTP y MediatR reales.</summary>
+    /// <summary>
+    /// Comprueba los seis ejemplos de daño a través del host HTTP y MediatR reales.
+    /// </summary>
     [Theory]
     [InlineData("weakness", 2, 39)]
     [InlineData("resistance", 0.5, 7)]
@@ -167,7 +197,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.Equal(100, result.RandomFactor);
     }
 
-    /// <summary>Comprueba que OpenAPI contiene todos los ejemplos y contratos de error del cálculo.</summary>
+    /// <summary>
+    /// Comprueba que OpenAPI contiene todos los ejemplos y contratos de error del cálculo.
+    /// </summary>
     [Fact]
     public async Task DocumentationContainsAllExamplesAndErrorContracts()
     {
@@ -180,7 +212,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.Contains("scalar", await client.GetStringAsync("/scalar/v1"), StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>Comprueba que todas las operaciones de negocio publican resumen y descripción en OpenAPI.</summary>
+    /// <summary>
+    /// Comprueba que todas las operaciones de negocio publican resumen y descripción en OpenAPI.
+    /// </summary>
     [Fact]
     public async Task EveryBusinessOperationHasSummaryAndDescription()
     {
@@ -208,7 +242,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.Equal(23, operationCount);
     }
 
-    /// <summary>Envía una petición de daño y comprueba su respuesta de error esperada.</summary>
+    /// <summary>
+    /// Envía una petición de daño y comprueba su respuesta de error esperada.
+    /// </summary>
     private async Task AssertProblem(string json, HttpStatusCode status, string mediaType = "application/json")
     {
         using var client = factory.CreateClient();
@@ -216,7 +252,9 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         await CheckProblem(response, status);
     }
 
-    /// <summary>Valida el estado HTTP, el formato ProblemDetails y la presencia del identificador de traza.</summary>
+    /// <summary>
+    /// Valida el estado HTTP, el formato ProblemDetails y la presencia del identificador de traza.
+    /// </summary>
     private static async Task CheckProblem(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode);
@@ -227,13 +265,19 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
         Assert.False(string.IsNullOrWhiteSpace(problem["traceId"]!.GetValue<string>()));
     }
 
-    /// <summary>Crea contenido HTTP JSON codificado en UTF-8 para las pruebas.</summary>
+    /// <summary>
+    /// Crea contenido HTTP JSON codificado en UTF-8 para las pruebas.
+    /// </summary>
     private static StringContent Json(string text) => new(text, Encoding.UTF8, "application/json");
-    /// <summary>Carga del fichero de pruebas el ejemplo de daño solicitado.</summary>
+    /// <summary>
+    /// Carga del fichero de pruebas el ejemplo de daño solicitado.
+    /// </summary>
     private static JsonObject Sample(string name = "weakness") =>
         JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Data", "damage-requests.json")))![name]!.AsObject();
 
-    /// <summary>Elimina una propiedad de un objeto JSON siguiendo una ruta con propiedades e índices.</summary>
+    /// <summary>
+    /// Elimina una propiedad de un objeto JSON siguiendo una ruta con propiedades e índices.
+    /// </summary>
     private static void Remove(JsonNode node, string path)
     {
         var parts = path.Split('.');
@@ -244,14 +288,18 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
 
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
-    /// <summary>Configura el cliente HTTP de pruebas con un token de autenticación válido.</summary>
+    /// <summary>
+    /// Configura el cliente HTTP de pruebas con un token de autenticación válido.
+    /// </summary>
     protected override void ConfigureClient(HttpClient client)
     {
         base.ConfigureClient(client);
         Authentication.TestTokens.Authorize(client);
     }
 
-    /// <summary>Configura el host de pruebas con autenticación controlada y dobles de persistencia y azar.</summary>
+    /// <summary>
+    /// Configura el host de pruebas con autenticación controlada y dobles de persistencia y azar.
+    /// </summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Production");
@@ -276,6 +324,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
 internal sealed class FixedRandom(int value) : IDamageRandom
 {
-    /// <summary>Devuelve el factor fijo configurado para el escenario de prueba.</summary>
+    /// <summary>
+    /// Devuelve el factor fijo configurado para el escenario de prueba.
+    /// </summary>
     public int Next() => value;
 }

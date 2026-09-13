@@ -3,16 +3,24 @@ using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Infrastructure.Persistence.Repositories;
 
-/// <summary>Consulta y persiste especies y planes de aprendizaje en la transacción de la unidad de trabajo.</summary>
+/// <summary>
+/// Consulta y persiste especies y planes de aprendizaje en la transacción de la unidad de trabajo.
+/// </summary>
 internal sealed class SpeciesRepository(CatalogDatabaseSession session) : ISpeciesRepository, ISpeciesReader
 {
-    /// <summary>Representa los datos y estadísticas almacenados de una especie.</summary>
+    /// <summary>
+    /// Representa los datos y estadísticas almacenados de una especie.
+    /// </summary>
     private sealed record Row(Guid Id, string Name, int Type, int Health, int Attack, int Defense, int SpecialAttack, int SpecialDefense, int Speed);
 
-    /// <summary>Relaciona una especie con un movimiento y el nivel necesario para aprenderlo.</summary>
+    /// <summary>
+    /// Relaciona una especie con un movimiento y el nivel necesario para aprenderlo.
+    /// </summary>
     private sealed record LearningRow(Guid SpeciesId, Guid MoveId, int Level);
 
-    /// <summary>Recupera las especies seleccionadas y carga sus planes de aprendizaje en una consulta por lote.</summary>
+    /// <summary>
+    /// Recupera las especies seleccionadas y carga sus planes de aprendizaje en una consulta por lote.
+    /// </summary>
     private async Task<IReadOnlyList<Species>> Select(string filter, object args, CancellationToken token)
     {
         var rows = (await session.QueryAsync<Row>("""
@@ -29,30 +37,44 @@ internal sealed class SpeciesRepository(CatalogDatabaseSession session) : ISpeci
             learning[row.Id].Select(entry => new LearnableMove(entry.MoveId, entry.Level)))).ToArray());
     }
 
-    /// <summary>Busca una especie por su identificador y devuelve null si no existe.</summary>
+    /// <summary>
+    /// Busca una especie por su identificador y devuelve null si no existe.
+    /// </summary>
     public async Task<Species?> FindAsync(Guid id, CancellationToken token) => (await Select("WHERE id=@Id", new { Id = id }, token)).SingleOrDefault();
 
-    /// <summary>Recupera las especies existentes que coinciden con los identificadores solicitados.</summary>
+    /// <summary>
+    /// Recupera las especies existentes que coinciden con los identificadores solicitados.
+    /// </summary>
     public Task<IReadOnlyList<Species>> FindManyAsync(IReadOnlyCollection<Guid> ids, CancellationToken token) =>
         Select("WHERE id=ANY(@Ids)", new { Ids = ids.ToArray() }, token);
 
-    /// <summary>Devuelve una página de especies ordenada por nombre e identificador.</summary>
+    /// <summary>
+    /// Devuelve una página de especies ordenada por nombre e identificador.
+    /// </summary>
     public Task<IReadOnlyList<Species>> ListAsync(CatalogPage page, CancellationToken token) =>
         Select("ORDER BY upper(name),id OFFSET @Offset LIMIT @Limit", page, token);
 
-    /// <summary>Devuelve una página de especies que pueden aprender el movimiento, ordenada por identificador.</summary>
+    /// <summary>
+    /// Devuelve una página de especies que pueden aprender el movimiento, ordenada por identificador.
+    /// </summary>
     public Task<IReadOnlyList<Species>> FindByMoveAsync(Guid moveId, CatalogPage page, CancellationToken token) =>
         Select("WHERE id IN(SELECT species_id FROM pokedex_learnset WHERE move_id=@MoveId) ORDER BY id OFFSET @Offset LIMIT @Limit", new { MoveId = moveId, page.Offset, page.Limit }, token);
 
-    /// <summary>Comprueba si otra especie utiliza el nombre indicado, sin distinguir mayúsculas.</summary>
+    /// <summary>
+    /// Comprueba si otra especie utiliza el nombre indicado, sin distinguir mayúsculas.
+    /// </summary>
     public Task<bool> NameExistsAsync(string name, Guid exceptId, CancellationToken token) =>
         session.ScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM pokedex_species WHERE upper(name)=upper(@Name) AND id<>@ExceptId)", new { Name = name, ExceptId = exceptId }, token);
 
-    /// <summary>Comprueba si algún plan de aprendizaje incluye el movimiento indicado.</summary>
+    /// <summary>
+    /// Comprueba si algún plan de aprendizaje incluye el movimiento indicado.
+    /// </summary>
     public Task<bool> ReferencesMoveAsync(Guid moveId, CancellationToken token) =>
         session.ScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM pokedex_learnset WHERE move_id=@MoveId)", new { MoveId = moveId }, token);
 
-    /// <summary>Inserta o actualiza la especie y reemplaza su plan de aprendizaje dentro de la operación actual.</summary>
+    /// <summary>
+    /// Inserta o actualiza la especie y reemplaza su plan de aprendizaje dentro de la operación actual.
+    /// </summary>
     public async Task SaveAsync(Species species, CancellationToken token)
     {
         var stats = species.Stats;
@@ -71,6 +93,8 @@ internal sealed class SpeciesRepository(CatalogDatabaseSession session) : ISpeci
                 """, new { species.Id, Moves = species.Learnset.Select(entry => entry.MoveId).ToArray(), Levels = species.Learnset.Select(entry => entry.Level).ToArray() }, token);
     }
 
-    /// <summary>Elimina la especie y su plan de aprendizaje dentro de la operación actual.</summary>
+    /// <summary>
+    /// Elimina la especie y su plan de aprendizaje dentro de la operación actual.
+    /// </summary>
     public Task DeleteAsync(Guid id, CancellationToken token) => session.ExecuteAsync("DELETE FROM pokedex_species WHERE id=@Id", new { Id = id }, token);
 }

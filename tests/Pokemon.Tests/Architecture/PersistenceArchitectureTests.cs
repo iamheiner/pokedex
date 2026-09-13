@@ -10,7 +10,9 @@ namespace Pokemon.Tests.Architecture;
 
 public sealed class PersistenceArchitectureTests
 {
-    /// <summary>Comprueba que Infrastructure no publica implementaciones de persistencia en memoria.</summary>
+    /// <summary>
+    /// Comprueba que Infrastructure no publica implementaciones de persistencia en memoria.
+    /// </summary>
     [Fact]
     public void Infrastructure_does_not_ship_in_memory_persistence()
     {
@@ -18,7 +20,9 @@ public sealed class PersistenceArchitectureTests
             type => type.Name.StartsWith("InMemory", StringComparison.Ordinal));
     }
 
-    /// <summary>Comprueba que Domain no depende de capas exteriores ni bibliotecas de infraestructura.</summary>
+    /// <summary>
+    /// Comprueba que Domain no depende de capas exteriores ni bibliotecas de infraestructura.
+    /// </summary>
     [Fact]
     public void Domain_has_no_outward_dependencies()
     {
@@ -26,7 +30,9 @@ public sealed class PersistenceArchitectureTests
         Assert.DoesNotContain(references, name => name.StartsWith("Pokemon.") || name.StartsWith("Npgsql") || name.StartsWith("Dapper") || name.StartsWith("Microsoft.Extensions"));
     }
 
-    /// <summary>Comprueba que Infrastructure depende de Domain sin referenciar Application ni API.</summary>
+    /// <summary>
+    /// Comprueba que Infrastructure depende de Domain sin referenciar Application ni API.
+    /// </summary>
     [Fact]
     public void Infrastructure_depends_on_domain_and_not_application_or_api()
     {
@@ -36,7 +42,9 @@ public sealed class PersistenceArchitectureTests
         Assert.DoesNotContain("Pokemon.Api", references);
     }
 
-    /// <summary>Comprueba que los contratos de repositorio y unidad de trabajo pertenecen a Domain.</summary>
+    /// <summary>
+    /// Comprueba que los contratos de repositorio y unidad de trabajo pertenecen a Domain.
+    /// </summary>
     [Fact]
     public void Repository_contracts_and_unit_of_work_belong_to_domain()
     {
@@ -48,7 +56,9 @@ public sealed class PersistenceArchitectureTests
         }
     }
 
-    /// <summary>Comprueba que API, Application y Domain no ejecutan comandos de base de datos directamente.</summary>
+    /// <summary>
+    /// Comprueba que API, Application y Domain no ejecutan comandos de base de datos directamente.
+    /// </summary>
     [Fact]
     public void Api_and_application_do_not_execute_database_commands()
     {
@@ -63,7 +73,9 @@ public sealed class PersistenceArchitectureTests
                     @"(NpgsqlCommand|NpgsqlDataSource|DbCommand|DbConnection)"), file);
             }
     }
-    /// <summary>Comprueba que Application no referencia implementaciones ni bibliotecas de base de datos.</summary>
+    /// <summary>
+    /// Comprueba que Application no referencia implementaciones ni bibliotecas de base de datos.
+    /// </summary>
     [Fact]
     public void Application_cannot_reference_database_implementations()
     {
@@ -71,7 +83,9 @@ public sealed class PersistenceArchitectureTests
         Assert.DoesNotContain(references, value => value.Name is "Pokemon.Infrastructure" or "Npgsql" or "Dapper");
     }
 
-    /// <summary>Comprueba que los handlers de consultas de Pokédex reciben únicamente el puerto de lectura.</summary>
+    /// <summary>
+    /// Comprueba que los handlers de consultas de Pokédex reciben únicamente el puerto de lectura.
+    /// </summary>
     [Fact]
     public void Pokedex_query_handlers_only_receive_read_ports()
     {
@@ -88,7 +102,9 @@ public sealed class PersistenceArchitectureTests
             Assert.DoesNotContain(reader.GetMethods(), method => method.Name.StartsWith("Save") || method.Name.StartsWith("Delete") || method.Name.StartsWith("Write"));
     }
 
-    /// <summary>Comprueba que toda solicitud de MediatR declara explícitamente si es Command o Query.</summary>
+    /// <summary>
+    /// Comprueba que toda solicitud de MediatR declara explícitamente si es Command o Query.
+    /// </summary>
     [Fact]
     public void Every_mediator_request_explicitly_declares_command_or_query()
     {
@@ -103,7 +119,9 @@ public sealed class PersistenceArchitectureTests
             Assert.Single(markers);
         }
     }
-    /// <summary>Comprueba que la consulta de partidas no recibe capacidades de escritura.</summary>
+    /// <summary>
+    /// Comprueba que la consulta de partidas no recibe capacidades de escritura.
+    /// </summary>
     [Fact]
     public void Battle_query_handler_does_not_receive_write_capabilities()
     {
@@ -112,7 +130,9 @@ public sealed class PersistenceArchitectureTests
         Assert.Single(typeof(IBattleReader).GetMethods());
     }
 
-    /// <summary>Comprueba que los contratos de salida no reutilizan tipos de entrada.</summary>
+    /// <summary>
+    /// Comprueba que los contratos de salida no reutilizan tipos de entrada.
+    /// </summary>
     [Fact]
     public void Output_contracts_do_not_reuse_input_contracts()
     {
@@ -120,7 +140,9 @@ public sealed class PersistenceArchitectureTests
         foreach (var view in assembly.GetTypes().Where(type => type.Name.EndsWith("View")))
             Assert.DoesNotContain(view.GetProperties(), property => property.PropertyType.Name.EndsWith("Input"));
     }
-    /// <summary>Comprueba que existe una unidad de trabajo común sin propiedades específicas de agregados.</summary>
+    /// <summary>
+    /// Comprueba que existe una unidad de trabajo común sin propiedades específicas de agregados.
+    /// </summary>
     [Fact]
     public void Unit_of_work_is_shared_and_has_no_aggregate_properties()
     {
@@ -132,7 +154,9 @@ public sealed class PersistenceArchitectureTests
         Assert.False(typeof(IReadRepository).IsAssignableFrom(typeof(IBattleRepository)));
     }
 
-    /// <summary>Comprueba que las excepciones de dominio están agrupadas en espacios de nombres Exceptions.</summary>
+    /// <summary>
+    /// Comprueba que las excepciones de dominio están agrupadas en espacios de nombres Exceptions.
+    /// </summary>
     [Fact]
     public void Domain_exceptions_are_organized_in_exception_namespaces()
     {

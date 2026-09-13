@@ -9,7 +9,9 @@ namespace Pokemon.Tests.Pokedex;
 
 public sealed class PokedexUnitOfWorkTests
 {
-    /// <summary>Comprueba que los tres repositorios de catálogo publican sus cambios o los revierten conjuntamente.</summary>
+    /// <summary>
+    /// Comprueba que los tres repositorios de catálogo publican sus cambios o los revierten conjuntamente.
+    /// </summary>
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

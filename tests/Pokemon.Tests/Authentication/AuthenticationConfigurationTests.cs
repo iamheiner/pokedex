@@ -6,7 +6,9 @@ namespace Pokemon.Tests.Authentication;
 
 public sealed class AuthenticationConfigurationTests
 {
-    /// <summary>Comprueba que una configuración de autenticación ausente o insegura impide iniciar la API.</summary>
+    /// <summary>
+    /// Comprueba que una configuración de autenticación ausente o insegura impide iniciar la API.
+    /// </summary>
     [Theory]
     [InlineData(null, "pokemon-api")]
     [InlineData("invalid", "pokemon-api")]

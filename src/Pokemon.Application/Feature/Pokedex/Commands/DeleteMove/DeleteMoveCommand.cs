@@ -9,10 +9,14 @@ namespace Pokemon.Application.Feature.Pokedex.Commands.DeleteMove;
 
 public sealed record DeleteMoveCommand(Guid Id) : ICommand<Unit>;
 
-/// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
+/// <summary>
+/// Coordina reglas y persistencia del agregado en una única transacción.
+/// </summary>
 public sealed class DeleteMoveCommandHandler(IUnitOfWork transactions) : IRequestHandler<DeleteMoveCommand, Unit>
 {
-    /// <summary>Elimina un movimiento existente si ningún plan de aprendizaje ni ejemplar lo referencia.</summary>
+    /// <summary>
+    /// Elimina un movimiento existente si ningún plan de aprendizaje ni ejemplar lo referencia.
+    /// </summary>
     public Task<Unit> Handle(DeleteMoveCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

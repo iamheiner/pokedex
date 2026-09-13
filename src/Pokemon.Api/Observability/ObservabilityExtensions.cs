@@ -1,17 +1,20 @@
-using Pokemon.Application.Common.Behaviors;
 using Npgsql;
-using MediatR;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Pokemon.Application.Common.Behaviors;
 
 namespace Pokemon.Api.Observability;
 
-/// <summary>Configura trazas, métricas y logs; el dominio no depende del destino de telemetría.</summary>
+/// <summary>
+/// Configura trazas, métricas y logs; el dominio no depende del destino de telemetría.
+/// </summary>
 public static class ObservabilityExtensions
 {
-    /// <summary>Configura trazas, métricas y logs de OpenTelemetry, con exportación OTLP cuando está habilitada.</summary>
+    /// <summary>
+    /// Configura trazas, métricas y logs de OpenTelemetry, con exportación OTLP cuando está habilitada.
+    /// </summary>
     public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
     {
         var export = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);

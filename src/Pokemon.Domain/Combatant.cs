@@ -13,13 +13,19 @@ namespace Pokemon.Domain;
 /// </remarks>
 public sealed class Combatant
 {
-    /// <summary>Identificador del ejemplar; no es el identificador de una especie.</summary>
+    /// <summary>
+    /// Identificador del ejemplar; no es el identificador de una especie.
+    /// </summary>
     public Guid Id { get; }
 
-    /// <summary>Nombre del Pokémon, por ejemplo «Charmander».</summary>
+    /// <summary>
+    /// Nombre del Pokémon, por ejemplo «Charmander».
+    /// </summary>
     public string Name { get; }
 
-    /// <summary>Grado de desarrollo, entre 1 y 100. Interviene en la fórmula de daño.</summary>
+    /// <summary>
+    /// Grado de desarrollo, entre 1 y 100. Interviene en la fórmula de daño.
+    /// </summary>
     public int Level { get; }
 
     /// <summary>
@@ -35,10 +41,14 @@ public sealed class Combatant
     /// </summary>
     public int CurrentHealth { get; }
 
-    /// <summary>Salud máxima: un Pokémon con 30 de 50 puntos tiene 30 actuales y 50 totales.</summary>
+    /// <summary>
+    /// Salud máxima: un Pokémon con 30 de 50 puntos tiene 30 actuales y 50 totales.
+    /// </summary>
     public int TotalHealth { get; }
 
-    /// <summary>Fuerza del Pokémon que se combina con el poder del movimiento para atacar.</summary>
+    /// <summary>
+    /// Fuerza del Pokémon que se combina con el poder del movimiento para atacar.
+    /// </summary>
     public int Attack { get; }
 
     /// <summary>

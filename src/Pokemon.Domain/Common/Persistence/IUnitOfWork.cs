@@ -7,6 +7,8 @@ namespace Pokemon.Domain.Common.Persistence;
 /// </summary>
 public interface IUnitOfWork
 {
-    /// <summary>Ejecuta un comando y confirma o revierte conjuntamente las operaciones de sus repositorios.</summary>
+    /// <summary>
+    /// Ejecuta un comando y confirma o revierte conjuntamente las operaciones de sus repositorios.
+    /// </summary>
     Task<T> WriteAsync<T>(Func<IRepositoryScope, Task<T>> command, CancellationToken token);
 }

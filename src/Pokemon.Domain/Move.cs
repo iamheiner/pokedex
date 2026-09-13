@@ -12,7 +12,9 @@ namespace Pokemon.Domain;
 /// </remarks>
 public sealed record Move
 {
-    /// <summary>Nombre del ataque, por ejemplo «Ascuas».</summary>
+    /// <summary>
+    /// Nombre del ataque, por ejemplo «Ascuas».
+    /// </summary>
     public string Name { get; }
 
     /// <summary>
@@ -28,7 +30,9 @@ public sealed record Move
     /// </summary>
     public PokemonType Type { get; }
 
-    /// <summary>Crea un movimiento válido; rechaza los datos que incumplen sus reglas.</summary>
+    /// <summary>
+    /// Crea un movimiento válido; rechaza los datos que incumplen sus reglas.
+    /// </summary>
     /// <param name="name">Nombre obligatorio, no vacío ni compuesto solo por espacios.</param>
     /// <param name="power">Poder entre 1 y 250, según el límite elegido para esta solución.</param>
     /// <param name="type">Uno de los tipos definidos en <see cref="PokemonType"/>.</param>
