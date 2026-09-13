@@ -1,3 +1,7 @@
+using Pokemon.Application.Feature.Battle.Persistence;
+using Pokemon.Infrastructure.Battle;
+using Pokemon.Api.Feature.Battle;
+using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Pokedex.Persistence;
 using Pokemon.Infrastructure.Pokedex;
 using Pokemon.Api.Feature.Pokedex.Moves;
@@ -21,9 +25,11 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.RespectNullableAnnotations = true;
     options.SerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter<PokemonType>(allowIntegerValues: false));
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter<BattlePhase>(allowIntegerValues: false));
 });
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddApplication();
+builder.Services.AddSingleton<IBattleStore, InMemoryBattleStore>();
 builder.Services.AddSingleton<IPokedexStore>(_ => new InMemoryPokedexStore());
 builder.Services.AddDamageFeature();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
@@ -43,6 +49,7 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("ApiDocu
 }
 app.MapHealthEndpoints();
 app.MapDamageEndpoints();
+app.MapBattleEndpoints();
 app.MapMovesEndpoints();
 app.MapSpeciesEndpoints();
 app.MapPokemonEndpoints();

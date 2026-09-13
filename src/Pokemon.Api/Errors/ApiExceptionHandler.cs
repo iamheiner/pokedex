@@ -1,3 +1,5 @@
+using Pokemon.Application.Feature.Battle;
+using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Pokedex;
 using Pokemon.Domain.Pokedex;
 using Microsoft.AspNetCore.Diagnostics;
@@ -13,9 +15,9 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExce
     {
         var status = exception switch
         {
-            InvalidDamageRequestException or PokedexRuleException => StatusCodes.Status400BadRequest,
-            PokedexNotFoundException => StatusCodes.Status404NotFound,
-            PokedexConflictException => StatusCodes.Status409Conflict,
+            InvalidDamageRequestException or PokedexRuleException or BattleRuleException => StatusCodes.Status400BadRequest,
+            PokedexNotFoundException or BattleNotFoundException => StatusCodes.Status404NotFound,
+            PokedexConflictException or BattleConflictException => StatusCodes.Status409Conflict,
             BadHttpRequestException badRequest => badRequest.StatusCode,
             _ => StatusCodes.Status500InternalServerError
         };
@@ -31,7 +33,8 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExce
                 Detail = exception switch
                 {
                     InvalidDamageRequestException validation => validation.Message,
-                    PokedexRuleException or PokedexNotFoundException or PokedexConflictException => exception.Message,
+                    PokedexRuleException or PokedexNotFoundException or PokedexConflictException or
+                    BattleRuleException or BattleNotFoundException or BattleConflictException => exception.Message,
                     BadHttpRequestException => "Send valid application/json with all required fields and supported type names.",
                     _ => "An unexpected error occurred. Use the traceId to locate the failure."
                 }

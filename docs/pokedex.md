@@ -49,7 +49,7 @@ La comprobación de CRUD sobre una API real está en `scripts/verify-pokedex.ps1
 - El plan de aprendizaje pertenece a la especie y se edita mediante su PUT. No puede contener movimientos desconocidos, nulos o duplicados. Una especie puede tener un plan vacío si no tiene ejemplares que dependan de él.
 - No se puede eliminar una especie con ejemplares ni un movimiento incluido en un plan de aprendizaje. Tampoco se puede modificar un plan de manera que invalide movimientos ya aprendidos. La API devuelve 409 y conserva el estado anterior.
 - Las referencias al catálogo son vivas: editar nombre, tipo o potencia de un movimiento se refleja en las siguientes consultas de ejemplares. Editar una especie modifica sus datos base compartidos; la salud actual y total de cada ejemplar se conservan.
-- Combatant y Move siguen siendo los datos inmutables que recibe la calculadora del ejercicio 1. Sus reglas de máximo cuatro movimientos no cambian; OwnedPokemon aplica la regla más estricta de exactamente cuatro del ejercicio 2. El ejercicio 3 deberá tomar una instantánea al iniciar una partida para que los cambios del catálogo no alteren un combate en curso.
+- Combatant y Move siguen siendo los datos inmutables que recibe la calculadora del ejercicio 1. Sus reglas de máximo cuatro movimientos no cambian; OwnedPokemon aplica la regla más estricta de exactamente cuatro del ejercicio 2. El ejercicio 3 toma una instantánea al iniciar una partida para que los cambios del catálogo no alteren un combate en curso.
 
 ## CQRS, persistencia y concurrencia
 
@@ -81,6 +81,6 @@ Se incluye un subconjunto de movimientos aprendidos por nivel, no el catálogo o
 
 Las pruebas de Pokédex cubren los tres CRUD, Location, campos obligatorios, proyecciones, cuatro movimientos, incompatibilidad y nivel, referencias, edición compartida, rollback, cancelación, aislamiento de colecciones, altas concurrentes, ejemplos OpenAPI ejecutables y uso de un ejemplar en POST /damage sin modificar su salud. Se ejecutan junto con las pruebas del ejercicio 1.
 
-El ejercicio 3 sigue pendiente. Este cambio se desarrolla en feature/pokedex; no se integra automáticamente en develop ni main.
+La Pokédex está integrada en develop como base del [ejercicio 3](combate.md), implementado en feature/battle. main conserva la entrega inicial.
 
 Verificación de esta entrega: 513 pruebas superadas en Windows y en Linux durante la construcción Docker. El script de CRUD se ejecutó contra la imagen arrancada y eliminó sus datos temporales. Scalar respondió HTTP 200. El workflow remoto de GitHub aún no se ha ejecutado.

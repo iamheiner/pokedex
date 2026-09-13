@@ -4,7 +4,7 @@
 
 Combatant representa un ejemplar concreto con identidad y movimientos aprendidos. Protege salud, nivel, estadísticas y máximo cuatro movimientos. Move es un objeto valor inmutable: nombre, tipo y poder determinan su igualdad. DamageCalculator es un servicio de dominio porque combina dos ejemplares y un movimiento sin pertenecer exclusivamente a uno de ellos.
 
-El cálculo no modifica salud ni comprueba turnos: calcula daño teórico, incluso si la salud es cero. Resolver quién puede actuar y descontar salud corresponde a una partida del ejercicio 3. El ejercicio 2 se documenta en [Pokédex](pokedex.md); el ejercicio 3 sigue pendiente.
+El cálculo no modifica salud ni comprueba turnos: calcula daño teórico, incluso si la salud es cero. Resolver quién puede actuar y descontar salud corresponde a una partida del ejercicio 3. El ejercicio 2 se documenta en [Pokédex](pokedex.md); el ejercicio 3 se documenta en [combate](combate.md).
 
 Se utiliza un único tipo por Pokémon y siempre Attack/Defense base. SpecialAttack/SpecialDefense se conservan por el enunciado, pero no participan. Introducir categoría física/especial sería una ampliación explícita; no se infiere solo por el tipo. No se añaden STAB, críticos, precisión, doble tipo ni efectos secundarios. Estos límites son deliberados y deben explicarse en entrevista.
 
@@ -34,7 +34,7 @@ La separación prevista al cerrar el ejercicio 1 fue:
 - Aprendizaje: relación especie–movimiento–nivel; no se deduce únicamente del tipo.
 - Partida: adversarios, turno/fase, estado y finalización.
 
-Hay que decidir qué ocurre con ejemplares existentes al editar un movimiento del catálogo, y cómo terminar un combate sin progreso por inmunidades. En el ejercicio 1 no se anticiparon repositorios vacíos. El ejercicio 2 añade el puerto transaccional y el almacén en memoria descritos en pokedex.md. PostgreSQL será la opción si se necesita almacenamiento; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
+La Pokédex usa referencias vivas al catálogo y las partidas usan snapshots. El agotamiento y esfuerzo evitan combates sin progreso; las reglas completas están en combate.md. En el ejercicio 1 no se anticiparon repositorios vacíos. El ejercicio 2 añade el puerto transaccional y el almacén en memoria descritos en pokedex.md. PostgreSQL será la opción si se necesita almacenamiento; Valkey (interpretación de «vaultkey») solo si un caso de uso justifica caché. El resultado aleatorio no se cachea.
 
 ## Operación y entrega
 

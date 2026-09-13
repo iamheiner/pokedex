@@ -1,8 +1,8 @@
-# Pokémon: cálculo de daño y Pokédex
+# Pokémon: daño, Pokédex y combate
 
-Backend de los **ejercicios 1 y 2** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Scalar y OpenTelemetry. Incluye cálculo de daño y Pokédex con CRUD de especies, movimientos y ejemplares. El ejercicio 3 (combate con estado) sigue pendiente.
+Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
 
-La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. El almacenamiento es en memoria: los cambios se pierden al reiniciar la API.
+La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. El almacenamiento de la colección y las partidas es en memoria: los cambios se pierden al reiniciar la API.
 
 ## Arranque con Docker
 
@@ -20,7 +20,7 @@ docker compose up --build -d
 | API | http://localhost:5080 | http://localhost:51966 |
 | Aspire | http://localhost:18888 | http://localhost:18888 |
 
-En Scalar selecciona **Damage → Test Request** y uno de los seis ejemplos. Los grupos **Pokedex** permiten probar los CRUD y consultas; los POST incluyen ejemplos. El puerto de Aspire se configura mediante `ASPIRE_DASHBOARD_PORT`. Para detener los servicios: `docker compose down`.
+En Scalar selecciona **Damage → Test Request** y uno de los seis ejemplos. Los grupos **Pokedex** permiten probar los CRUD y consultas; **Battle** permite crear partidas y resolver sus turnos. Los POST de creación incluyen ejemplos. El puerto de Aspire se configura mediante `ASPIRE_DASHBOARD_PORT`. Para detener los servicios: `docker compose down`.
 
 Compose habilita la documentación y el dashboard para uso local. La API y la UI solo se publican en loopback. OTLP circula por la red interna de Docker. El dashboard admite acceso anónimo y pierde los datos al reiniciarse; no es una configuración de publicación pública ni de retención de producción.
 
@@ -45,6 +45,7 @@ El ejemplo es Squirtle contra Charmander: efectividad 2, daño entre 33 y 39 y f
 
 - `POST /damage`: devuelve `damage`, `effectiveness` y `randomFactor`, sin modificar salud.
 - `/species`, `/moves`, `/pokemon`: CRUD del ejercicio 2. Las rutas, consultas de aprendizaje, reglas y ejemplos están en [Pokédex](docs/pokedex.md).
+- `POST /battles`, `GET /battles/{id}`, `POST /battles/{id}/turns`: combate con estado, historial y control de versión. Reglas y demostración en [combate](docs/combate.md).
 - `GET /health`: estado del proceso.
 - `GET /openapi/v1.json`: contrato OpenAPI; Scalar en `/scalar/v1`.
 
@@ -56,26 +57,29 @@ Errores en formato `application/problem+json`, con `status`, `title`, `detail` y
 
 ```text
 src/
-  Pokemon.Domain/                 # Daño y agregados Pokedex
+  Pokemon.Domain/                 # Daño, agregados Pokedex y Battle
   Pokemon.Application/
     Common/Exceptions/           # Errores esperados del caso de uso
     Feature/Damage/
       Queries/CalculateDamage/   # Query y handler
       IDamageRandom.cs
     Feature/Pokedex/             # Commands, Queries, contratos y puerto transaccional
+    Feature/Battle/              # Crear, consultar y resolver partidas
   Pokemon.Infrastructure/
     Pokedex/                     # Almacén en memoria y datos iniciales
+    Battle/                      # Almacén atómico de partidas
   Pokemon.Api/
     Errors/                      # Contrato uniforme de errores HTTP
     Feature/Damage/              # Endpoint, contratos y seis ejemplos
     Feature/Pokedex/             # HTTP de Species, Moves y Pokemon
+    Feature/Battle/              # Contrato HTTP de partidas y turnos
     Feature/Health/
     Observability/               # Trazas, logs y métricas
     Program.cs                   # Configuración y composición
 tests/Pokemon.Tests/            # Dominio, matriz, CQRS y HTTP real
 ```
 
-Flujo: HTTP → ISender → comportamiento de telemetría → QueryHandler → dominio. Domain no depende de ASP.NET, MediatR ni OpenTelemetry. El agregado protege sus invariantes y la colección de movimientos; el handler coordina el cálculo. La organización por Feature admite nuevos casos de uso sin acumularlos en Program.cs.
+Flujo: HTTP → ISender → comportamiento de telemetría → handler de Command/Query → dominio y puerto de almacenamiento. Domain no depende de ASP.NET, MediatR ni OpenTelemetry. Los agregados protegen sus invariantes; los handlers coordinan cada caso de uso. La organización por Feature admite nuevos casos de uso sin acumularlos en Program.cs.
 
 ## Decisiones principales
 
@@ -87,7 +91,7 @@ La Pokédex usa almacenamiento en memoria con operaciones atómicas; no requiere
 
 ## Verificación
 
-La suite contiene **513 casos de prueba**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback.
+La suite contiene **549 casos de prueba**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
 
 Docker ejecuta las pruebas antes de publicar una imagen multietapa con usuario no privilegiado. Se pueden obtener datos de cobertura con:
 
@@ -102,3 +106,5 @@ El [informe de revisión](docs/revision-enunciado.md) conserva los hallazgos ini
 Las dependencias resueltas se guardan en `packages.lock.json`; Docker y el workflow de GitHub restauran en modo bloqueado. `.github/workflows/verify.yml` queda preparado para ejecutar pruebas y construir la imagen al subir el proyecto a GitHub. El workflow remoto todavía no se ha ejecutado.
 
 El repositorio sigue [Git Flow](docs/git-flow.md), con ramas de entrega e integración.
+
+Los recorridos HTTP reproducibles están en `scripts/verify-pokedex.ps1` y `scripts/verify-battle.ps1`; admiten `-BaseUrl` para usar el puerto elegido.
