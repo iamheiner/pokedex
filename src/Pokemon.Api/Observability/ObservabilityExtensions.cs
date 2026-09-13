@@ -1,3 +1,4 @@
+using Npgsql;
 using MediatR;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -19,7 +20,8 @@ public static class ObservabilityExtensions
             {
                 tracing.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddSource(RequestTelemetry.Name);
+                    .AddSource(RequestTelemetry.Name)
+                    .AddNpgsql();
                 if (export) tracing.AddOtlpExporter();
             })
             .WithMetrics(metrics =>

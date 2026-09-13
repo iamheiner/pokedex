@@ -1,0 +1,5 @@
+# Opcional: acceso a PostgreSQL desde una API o un depurador ejecutados en el host.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-54329}:5432"

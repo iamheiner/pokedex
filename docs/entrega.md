@@ -17,10 +17,10 @@ Para revisar la entrega:
 5. Ejecutar el script de combate y consultar después la partida por su identificador. Comparar salud inicial y final y comprobar que la colección no ha cambiado.
 6. Abrir Aspire y localizar CreateBattleCommand, GetBattleQuery y PlayTurnCommand dentro de sus peticiones HTTP.
 
-La persistencia en memoria está permitida por el enunciado. Se documenta su pérdida de estado al reiniciar y su limitación a un proceso. No se incorpora una base de datos ni caché sin una necesidad del ejercicio. El diseño separa dominio, aplicación, transporte e infraestructura; el dominio no depende de ASP.NET, MediatR ni almacenamiento.
+Las partidas usan PostgreSQL para conservar el estado tras reiniciar; la Pokédex mantiene memoria, permitida por el enunciado. Las diferencias y garantías se explican en [persistencia](persistencia.md). No se necesita caché. El diseño separa dominio, aplicación, transporte e infraestructura; el dominio no depende de ASP.NET, MediatR ni almacenamiento.
 
 Para la entrevista, conviene poder explicar por qué un movimiento del catálogo tiene identidad mientras Move del cálculo es un objeto valor; por qué aprendizaje no equivale a coincidir en tipo; por qué la partida usa snapshots; cómo se evitan dos ataques concurrentes; y cómo se termina un combate con inmunidades. Las decisiones de simplificación son parte de la solución y están descritas en los documentos de cada ejercicio.
 
 El desarrollo sigue Git Flow. main conserva la entrega inicial; Pokédex está integrada en develop y el combate se prepara en feature/battle. La integración del combate y la release final se realizarán tras revisar esta funcionalidad. No se ha publicado en un remoto ni ejecutado el workflow de GitHub allí.
 
-La suite conjunta contiene 549 pruebas superadas en Windows y Docker Linux. Los recorridos HTTP de Pokédex y combate se han ejecutado contra sus imágenes. El detalle de los escenarios y límites de cada verificación está en los documentos de cada ejercicio.
+La suite conjunta contiene 562 pruebas sin base de datos superadas en Windows y Docker Linux, más 8 pruebas superadas contra PostgreSQL real. Los recorridos HTTP de Pokédex y combate se han ejecutado contra sus imágenes. El detalle de los escenarios y límites de cada verificación está en los documentos de cada ejercicio.

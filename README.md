@@ -2,11 +2,11 @@
 
 Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
 
-La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. El almacenamiento de la colección y las partidas es en memoria: los cambios se pierden al reiniciar la API.
+La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. Las partidas se guardan en PostgreSQL y sobreviven al reinicio. La colección de la Pokédex sigue en memoria. Configuración y garantías en [persistencia](docs/persistencia.md).
 
 ## Arranque con Docker
 
-Requiere Docker con contenedores Linux.
+Requiere Docker con contenedores Linux. Compose incluye PostgreSQL con volumen persistente.
 
 ```powershell
 # Opcional si el puerto predeterminado 5080 está ocupado:
@@ -29,8 +29,9 @@ Compose habilita la documentación y el dashboard para uso local. La API y la UI
 Requiere SDK .NET 10.0.302 o compatible según `global.json`.
 
 ```powershell
-dotnet test PokemonTwo.slnx -c Release
-dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true
+dotnet test PokemonTwo.slnx -c Release --filter 'Category!=Postgres'
+# Ejecución efímera sin PostgreSQL; para persistencia local, consultar docs/persistencia.md.
+dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true --BattlePersistence:Provider=Memory
 ```
 
 Sin `OTEL_EXPORTER_OTLP_ENDPOINT` la API funciona sin collector. Para una demostración con Aspire, usar Compose.
@@ -46,7 +47,7 @@ El ejemplo es Squirtle contra Charmander: efectividad 2, daño entre 33 y 39 y f
 - `POST /damage`: devuelve `damage`, `effectiveness` y `randomFactor`, sin modificar salud.
 - `/species`, `/moves`, `/pokemon`: CRUD del ejercicio 2. Las rutas, consultas de aprendizaje, reglas y ejemplos están en [Pokédex](docs/pokedex.md).
 - `POST /battles`, `GET /battles/{id}`, `POST /battles/{id}/turns`: combate con estado, historial y control de versión. Reglas y demostración en [combate](docs/combate.md).
-- `GET /health`: estado del proceso.
+- `GET /health`: estado del proceso; `GET /health/ready`: disponibilidad de PostgreSQL y su esquema.
 - `GET /openapi/v1.json`: contrato OpenAPI; Scalar en `/scalar/v1`.
 
 Todos los campos del JSON son obligatorios. Tipos como `Fire` o `Water` se envían como texto. Un campo omitido no recibe un valor por defecto; se rechazan referencias nulas, propiedades desconocidas, valores fuera de rango y movimientos no aprendidos. Salud cero enviada explícitamente sí es válida para el cálculo teórico.
@@ -67,7 +68,7 @@ src/
     Feature/Battle/              # Crear, consultar y resolver partidas
   Pokemon.Infrastructure/
     Pokedex/                     # Almacén en memoria y datos iniciales
-    Battle/                      # Almacén atómico de partidas
+    Battle/                      # Adaptadores PostgreSQL/memoria, formato durable y migraciones
   Pokemon.Api/
     Errors/                      # Contrato uniforme de errores HTTP
     Feature/Damage/              # Endpoint, contratos y seis ejemplos
@@ -91,15 +92,15 @@ La Pokédex usa almacenamiento en memoria con operaciones atómicas; no requiere
 
 ## Verificación
 
-La suite contiene **549 casos de prueba**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
+La suite contiene **562 casos sin base de datos y 8 contra PostgreSQL real**. Las pruebas cubren los 324 cruces de efectividad con datos independientes del código, fórmula con estadísticas asimétricas, extremos y redondeo, invariantes del modelo, seis ejemplos por HTTP, campos obligatorios, errores y cancelación. La integración usa el host real de ASP.NET y el registro real de MediatR. La Pokédex añade pruebas de CRUD, consultas, referencias, aprendizaje, concurrencia y rollback. El combate cubre partidas completas, snapshots, versiones, agotamiento, inmunidades, esfuerzo y finalización.
 
 Docker ejecuta las pruebas antes de publicar una imagen multietapa con usuario no privilegiado. Se pueden obtener datos de cobertura con:
 
 ```powershell
-dotnet test PokemonTwo.slnx -c Release --collect:"XPlat Code Coverage" --results-directory TestResults
+dotnet test PokemonTwo.slnx -c Release --filter "Category!=Postgres" --collect:"XPlat Code Coverage" --results-directory TestResults
 ```
 
-En Aspire, el servicio `pokemon-api` muestra el POST y el span `CalculateDamageQuery` con el mismo TraceId, logs correlacionados y métricas `pokemon.requests`/`pokemon.request.duration`. Las futuras Queries/Commands heredan la instrumentación; la instrumentación de una futura base de datos se añadirá al incorporarla.
+En Aspire, el servicio `pokemon-api` muestra el POST y el span `CalculateDamageQuery` con el mismo TraceId, logs correlacionados y métricas `pokemon.requests`/`pokemon.request.duration`. Las futuras Queries/Commands heredan la instrumentación; las operaciones PostgreSQL añaden spans de Npgsql.
 
 El [informe de revisión](docs/revision-enunciado.md) conserva los hallazgos iniciales y su cierre para dar trazabilidad a las correcciones.
 
@@ -108,3 +109,5 @@ Las dependencias resueltas se guardan en `packages.lock.json`; Docker y el workf
 El repositorio sigue [Git Flow](docs/git-flow.md), con ramas de entrega e integración.
 
 Los recorridos HTTP reproducibles están en `scripts/verify-pokedex.ps1` y `scripts/verify-battle.ps1`; admiten `-BaseUrl` para usar el puerto elegido.
+
+La suite PostgreSQL se ejecuta con `docker compose run --build --rm postgres-tests`. El script `scripts/verify-battle-persistence.ps1` comprueba la recuperación tras recrear PostgreSQL y reiniciar la API. `docker compose down` conserva las partidas; `docker compose down -v` elimina sus datos.

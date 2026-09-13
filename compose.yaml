@@ -6,17 +6,50 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ApiDocumentation__Enabled: "true"
+      BattlePersistence__Provider: Postgres
+      ConnectionStrings__Battles: "Host=postgres;Database=pokemon;Username=pokemon;Password=${POSTGRES_PASSWORD:-pokemon_local_only};GSS Encryption Mode=Disable"
       OTEL_SERVICE_NAME: pokemon-api
       OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_METRIC_EXPORT_INTERVAL: "5000"
     depends_on:
-      - aspire-dashboard
+      postgres:
+        condition: service_healthy
+      aspire-dashboard:
+        condition: service_started
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: pokemon
+      POSTGRES_USER: pokemon
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pokemon_local_only}
+    volumes:
+      - pokemon-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pokemon -d pokemon"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  postgres-tests:
+    profiles: [tests]
+    build:
+      context: .
+      target: postgres-tests
+    environment:
+      POKEMON_POSTGRES_TEST_CONNECTION: "Host=postgres;Database=pokemon;Username=pokemon;Password=${POSTGRES_PASSWORD:-pokemon_local_only};GSS Encryption Mode=Disable"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   aspire-dashboard:
     image: mcr.microsoft.com/dotnet/aspire-dashboard:13.3
     ports:
       - "127.0.0.1:${ASPIRE_DASHBOARD_PORT:-18888}:18888"
     environment:
-      # Uso local: la UI solo se publica en loopback y OTLP solo en la red de Compose.
+      # Uso local: UI en loopback y OTLP solo en la red de Compose.
       ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+
+volumes:
+  pokemon-postgres:

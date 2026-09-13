@@ -196,6 +196,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Production");
+        builder.UseSetting("BattlePersistence:Provider", "Memory");
         builder.UseSetting("ApiDocumentation:Enabled", "true");
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "");
         builder.ConfigureServices(services =>

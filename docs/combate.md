@@ -75,7 +75,7 @@ Un fallo o cancelación antes de publicar conserva el estado anterior. Un fallo 
 
 Battle es la raíz del agregado y concentra las reglas. BattlePokemon y BattleMove son datos internos inmutables de la partida. El historial también es inmutable y se expone como colección de solo lectura. Application/Feature/Battle contiene dos Commands, una Query, contratos, mapeo de snapshots y el puerto IBattleStore. La API únicamente adapta HTTP.
 
-Infrastructure/Battle implementa IBattleStore con memoria y exclusión mutua. Publica una nueva referencia solo si la acción termina correctamente. Las partidas se conservan durante la vida del proceso y **se pierden al reiniciar**. No hay almacenamiento compartido entre réplicas ni limpieza automática de partidas antiguas en este alcance pequeño; una operación de producción necesitaría persistencia, retención y transacciones por partida. PostgreSQL sería la opción prevista para esa evolución.
+Infrastructure/Battle implementa IBattleStore con PostgreSQL en el modo normal. Las partidas sobreviven al reinicio y las acciones se confirman con bloqueo por fila y transacciones. Se conserva un adaptador de memoria explícito para pruebas. El esquema, el formato durable, las migraciones y sus límites están en [persistencia](persistencia.md).
 
 Se mantienen las simplificaciones de los ejercicios anteriores: un tipo por Pokémon, estadísticas normales para el daño y ataques de potencia fija. No se añaden objetos, estados alterados, cambios de Pokémon, experiencia, evolución, prioridad especial de movimientos ni inteligencia artificial. Los clientes eligen ambos ataques; el script de demostración automatiza esa elección tomando el primer movimiento con usos.
 
@@ -87,8 +87,10 @@ Arranca con Docker según el README. En Scalar, el grupo Battle incluye un ejemp
 ./scripts/verify-battle.ps1 -BaseUrl http://localhost:51966
 ```
 
-El script muestra cada acción, comprueba la finalización y su consulta posterior, verifica el rechazo de acciones tras el final y confirma que la salud de la Pokédex no cambia. La partida terminada queda consultable hasta reiniciar la API.
+El script muestra cada acción, comprueba la finalización y su consulta posterior, verifica el rechazo de acciones tras el final y confirma que la salud de la Pokédex no cambia. La partida terminada queda guardada en PostgreSQL y sigue consultable después de reiniciar la API.
 
 Las pruebas cubren velocidad y empate inicial, daño y límites de salud, consumo, inmunidades, redondeo a cero, agotamiento, esfuerzo y retroceso, ganador y empate, historial inmutable, snapshots, partidas independientes, cancelación, rollback, 500 saneado, contratos JSON, concurrencia y un combate HTTP completo. La suite incluye las regresiones de los ejercicios 1 y 2.
 
-Verificación de entrega: 549 pruebas superadas en Windows y durante la construcción Linux de Docker. El script de combate completó una partida real en diez acciones, comprobó el estado final, el rechazo posterior con 409 y la salud intacta de la colección. Scalar y Aspire respondieron HTTP 200. El resultado de otra ejecución puede variar por el factor aleatorio.
+Verificación inicial del combate, antes de incorporar PostgreSQL: 549 pruebas superadas en Windows y durante la construcción Linux de Docker. El script de combate completó una partida real en diez acciones, comprobó el estado final, el rechazo posterior con 409 y la salud intacta de la colección. Scalar y Aspire respondieron HTTP 200. El resultado de otra ejecución puede variar por el factor aleatorio.
+
+La ampliación de persistencia se verifica con 562 casos generales y 8 casos PostgreSQL reales, además del recorrido de reinicio documentado en persistencia.md.

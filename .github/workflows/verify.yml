@@ -13,5 +13,8 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet restore PokemonTwo.slnx --locked-mode
-      - run: dotnet test PokemonTwo.slnx -c Release --no-restore
+      - run: dotnet test PokemonTwo.slnx -c Release --no-restore --filter "Category!=Postgres"
       - run: docker build --tag pokemon-api:verify .
+      - run: docker compose run --build --rm postgres-tests
+      - if: always()
+        run: docker compose down

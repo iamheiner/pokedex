@@ -4,3 +4,6 @@
 .codegraph/
 tmp/
 TestResults/
+
+.env
+.postgres-agent.local.json

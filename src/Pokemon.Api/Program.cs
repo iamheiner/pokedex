@@ -1,5 +1,3 @@
-using Pokemon.Application.Feature.Battle.Persistence;
-using Pokemon.Infrastructure.Battle;
 using Pokemon.Api.Feature.Battle;
 using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Pokedex.Persistence;
@@ -29,7 +27,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddApplication();
-builder.Services.AddSingleton<IBattleStore, InMemoryBattleStore>();
+builder.Services.AddBattlePersistence(builder.Configuration);
 builder.Services.AddSingleton<IPokedexStore>(_ => new InMemoryPokedexStore());
 builder.Services.AddDamageFeature();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();

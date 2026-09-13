@@ -4,3 +4,6 @@
 .codegraph
 tmp
 docs
+
+.env
+.postgres-agent.local.json
