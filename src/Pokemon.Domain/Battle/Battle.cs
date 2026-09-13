@@ -19,6 +19,7 @@ public sealed class Battle
         : First.Snapshot.CurrentHealth > 0 ? First.Snapshot.Id : Second.Snapshot.Id;
     public bool IsDraw => First.Snapshot.CurrentHealth == 0 && Second.Snapshot.CurrentHealth == 0;
 
+    /// <summary>Construye el estado inmutable de la partida y elimina el siguiente actor si el combate ha terminado.</summary>
     private Battle(Guid id, BattlePokemon first, BattlePokemon second, Guid? nextPokemonId, IEnumerable<BattleTurn> turns)
     {
         Id = id; First = first; Second = second;

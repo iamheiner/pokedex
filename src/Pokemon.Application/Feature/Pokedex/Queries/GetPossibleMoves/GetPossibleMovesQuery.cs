@@ -10,6 +10,7 @@ public sealed record GetPossibleMovesQuery(Guid Id) : IQuery<PossibleMovesView>;
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
 public sealed class GetPossibleMovesQueryHandler(IReadSession reader) : IRequestHandler<GetPossibleMovesQuery, PossibleMovesView>
 {
+    /// <summary>Devuelve el plan completo de movimientos posibles del ejemplar, incluidos los niveles futuros.</summary>
     public Task<PossibleMovesView> Handle(GetPossibleMovesQuery request, CancellationToken token) =>
         reader.ReadAsync<PossibleMovesView>(async data =>
         {

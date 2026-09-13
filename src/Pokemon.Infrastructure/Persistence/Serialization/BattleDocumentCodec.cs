@@ -20,9 +20,11 @@ public static class BattleDocumentCodec
         Converters = { new JsonStringEnumConverter<PokemonType>(allowIntegerValues: false) }
     };
 
+    /// <summary>Serializa la partida en un documento versionado con el estado inicial y sus acciones resueltas.</summary>
     public static string Serialize(BattleAggregate battle) => JsonSerializer.Serialize(new Document(
         1, battle.Id, battle.Version, Initial(battle.First, battle.Turns), Initial(battle.Second, battle.Turns), battle.Turns.ToArray()), Json);
 
+    /// <summary>Reconstruye una partida reproduciendo sus acciones y rechaza documentos inconsistentes.</summary>
     public static BattleAggregate Deserialize(string json)
     {
         try
@@ -46,6 +48,7 @@ public static class BattleDocumentCodec
         }
     }
 
+    /// <summary>Obtiene la instantánea inicial del participante a partir del estado y el historial de la partida.</summary>
     private static PokemonDocument Initial(BattlePokemon participant, IReadOnlyList<BattleTurn> turns)
     {
         var p = participant.Snapshot;
@@ -57,6 +60,7 @@ public static class BattleDocumentCodec
             participant.Moves.Select(m => new MoveDocument(m.Id, m.Definition.Name, m.Definition.Power, m.Definition.Type)).ToArray());
     }
 
+    /// <summary>Reconstruye un participante desde los datos persistidos y restablece sus movimientos iniciales.</summary>
     private static BattlePokemon Restore(PokemonDocument p)
     {
         if (p.Moves.Any(m => m is null)) throw new InvalidDataException("Missing stored move.");

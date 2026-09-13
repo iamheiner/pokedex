@@ -5,6 +5,7 @@ namespace Pokemon.Application.Feature.Pokedex.Contracts;
 /// <summary>Datos del caso de uso; los constructores del dominio protegen las invariantes.</summary>
 public sealed record StatsInput(int Health, int Attack, int Defense, int SpecialAttack, int SpecialDefense, int Speed)
 {
+    /// <summary>Convierte las estadísticas de entrada al objeto valor validado por el dominio.</summary>
     public BaseStats ToDomain() => new(Health, Attack, Defense, SpecialAttack, SpecialDefense, Speed);
 }
 public sealed record LearningInput(Guid MoveId, int Level);

@@ -11,6 +11,7 @@ namespace Pokemon.Api.Observability;
 /// <summary>Configura trazas, métricas y logs; el dominio no depende del destino de telemetría.</summary>
 public static class ObservabilityExtensions
 {
+    /// <summary>Configura trazas, métricas y logs de OpenTelemetry, con exportación OTLP cuando está habilitada.</summary>
     public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
     {
         var export = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);

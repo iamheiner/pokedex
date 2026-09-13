@@ -16,12 +16,14 @@ namespace Pokemon.Tests.Pokedex;
 public sealed class PostgresPokedexTests
 {
     private static readonly BaseStats Stats = new(40, 50, 60, 70, 80, 90);
+    /// <summary>Crea una base de pruebas aislada con las migraciones de partidas y Pokédex aplicadas.</summary>
     private static async Task<TestDatabase> Database()
     {
         var db = await TestDatabase.Create();
         try { await new PokedexDatabaseMigrator(new DatabaseConnectionFactory(db.Source)).Migrate(default); return db; }
         catch { await db.DisposeAsync(); throw; }
     }
+    /// <summary>Serializa el catálogo de la sesión con orden estable para comparar estados entre operaciones.</summary>
     private static async Task<string> Snapshot(IReadRepositoryScope data) => JsonSerializer.Serialize(new
     {
         Moves = (await data.GetReader<IMoveReader>().ListAsync(new(), default)).OrderBy(value => value.Id),
@@ -29,6 +31,7 @@ public sealed class PostgresPokedexTests
         Pokemon = (await data.GetReader<IOwnedPokemonReader>().ListAsync(new(), default)).OrderBy(value => value.Id)
     });
 
+    /// <summary>Comprueba que repetir la migración no sobrescribe cambios ni restaura recursos eliminados.</summary>
     [PostgresFact]
     public async Task Seed_runs_once_and_never_overwrites_changes_or_resurrects_deletions()
     {
@@ -47,6 +50,7 @@ public sealed class PostgresPokedexTests
         Assert.Equal(4, await store.ReadAsync(async data => (await data.GetReader<IOwnedPokemonReader>().ListAsync(new(), default)).Count, default));
     }
 
+    /// <summary>Comprueba que los agregados se recuperan, actualizan y eliminan desde conexiones diferentes.</summary>
     [PostgresFact]
     public async Task Aggregates_round_trip_update_and_delete_across_new_connections()
     {
@@ -85,6 +89,7 @@ public sealed class PostgresPokedexTests
         Assert.Equal((21, 5, 5), await store.ReadAsync(async data => ((await data.GetReader<IMoveReader>().ListAsync(new(), default)).Count, (await data.GetReader<ISpeciesReader>().ListAsync(new(), default)).Count, (await data.GetReader<IOwnedPokemonReader>().ListAsync(new(), default)).Count), default));
     }
 
+    /// <summary>Comprueba que fallos del callback, cancelación y errores SQL revierten toda la operación.</summary>
     [PostgresFact]
     public async Task Callback_failure_cancellation_and_database_failure_roll_back_all_changes()
     {
@@ -108,6 +113,7 @@ public sealed class PostgresPokedexTests
         Assert.Equal(before, await store.ReadAsync(Snapshot, default));
     }
 
+    /// <summary>Comprueba que escritores de distintas instancias ven los nombres confirmados antes de intentar crear otro.</summary>
     [PostgresFact]
     public async Task Concurrent_instances_observe_latest_names_before_writing()
     {
@@ -124,6 +130,7 @@ public sealed class PostgresPokedexTests
         Assert.Single(await repositories[0].ReadAsync(async data => (await data.GetReader<IMoveReader>().ListAsync(new(), default)).Where(move => move.Name == "Concurrent").ToArray(), default));
     }
 
+    /// <summary>Comprueba que una sesión terminada y una sesión de lectura no permiten escribir.</summary>
     [PostgresFact]
     public async Task Escaped_session_cannot_write_after_transaction_completion()
     {
@@ -142,6 +149,7 @@ public sealed class PostgresPokedexTests
         Assert.Equal(before, await store.ReadAsync(Snapshot, default));
     }
 
+    /// <summary>Comprueba que una lectura repetible conserva su instantánea aunque otra transacción confirme cambios.</summary>
     [PostgresFact]
     public async Task Read_snapshot_does_not_mix_data_from_an_intervening_commit()
     {
@@ -171,6 +179,7 @@ public sealed class PostgresPokedexTests
         Assert.Equal(22, await store.ReadAsync(async data => (await data.GetReader<IMoveReader>().ListAsync(new(), default)).Count, default));
     }
 
+    /// <summary>Comprueba que los agregados almacenados inválidos se presentan como errores de infraestructura.</summary>
     [PostgresFact]
     public async Task Corrupt_stored_domain_state_is_an_infrastructure_error()
     {
@@ -179,6 +188,7 @@ public sealed class PostgresPokedexTests
         await command.ExecuteNonQueryAsync();
         await Assert.ThrowsAsync<InvalidDataException>(() => new DatabaseUnitOfWork(new DatabaseConnectionFactory(db.Source)).ReadAsync(Snapshot, default));
     }
+    /// <summary>Comprueba que una lectura selectiva no materializa otros agregados corruptos ajenos a la consulta.</summary>
     [PostgresFact]
     public async Task Selective_reads_do_not_materialize_unrelated_corrupt_aggregates()
     {
@@ -194,6 +204,7 @@ public sealed class PostgresPokedexTests
         await Assert.ThrowsAsync<InvalidDataException>(() => store.ReadAsync(data => data.GetReader<IOwnedPokemonReader>().FindAsync(Guid.Parse("00000000-0000-0000-0000-000000000201"), default), default));
     }
 
+    /// <summary>Comprueba la paginación SQL estable y el tratamiento de los nombres como parámetros.</summary>
     [PostgresFact]
     public async Task Sql_pages_are_stable_and_names_are_parameters()
     {

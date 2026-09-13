@@ -10,6 +10,7 @@ public sealed record GetPokemonQuery(Guid Id) : IQuery<PokemonView>;
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
 public sealed class GetPokemonQueryHandler(IReadSession reader) : IRequestHandler<GetPokemonQuery, PokemonView>
 {
+    /// <summary>Recupera el ejemplar solicitado con sus estadísticas y movimientos aprendidos.</summary>
     public Task<PokemonView> Handle(GetPokemonQuery request, CancellationToken token) =>
         reader.ReadAsync<PokemonView>(async data =>
         {

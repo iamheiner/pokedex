@@ -12,6 +12,7 @@ namespace Pokemon.Api.Feature.Pokedex.Pokemon;
 /// <summary>Adaptadores HTTP del recurso pokemon; MediatR ejecuta los casos de uso.</summary>
 public static class PokemonEndpoints
 {
+    /// <summary>Registra las rutas de ejemplares y sus consultas de movimientos aprendidos y posibles.</summary>
     public static void MapPokemonEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/pokemon").WithTags("Pokedex - Pokemon")

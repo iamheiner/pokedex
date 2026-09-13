@@ -16,9 +16,11 @@ public static class DocumentationAuthentication
     public const string Cookie = "DocumentationCookie";
     public const string Oidc = "Keycloak";
 
+    /// <summary>Determina si la documentación está habilitada según el entorno y la configuración.</summary>
     public static bool IsEnabled(IHostEnvironment environment, IConfiguration configuration) =>
         environment.IsDevelopment() || configuration.GetValue<bool>("ApiDocumentation:Enabled");
 
+    /// <summary>Configura el inicio de sesión OIDC y la cookie utilizada para acceder a la documentación.</summary>
     public static IServiceCollection AddDocumentationAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var secret = configuration["Authentication:DocumentationClientSecret"];
@@ -82,6 +84,7 @@ public static class DocumentationAuthentication
         return services;
     }
 
+    /// <summary>Publica OpenAPI y Scalar con su política de acceso y configura el inicio y cierre de sesión documental.</summary>
     public static void MapProtectedDocumentation(this WebApplication app)
     {
         var group = app.MapGroup("").RequireAuthorization(Policy);

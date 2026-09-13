@@ -6,6 +6,7 @@ namespace Pokemon.Api.Feature.Authentication;
 /// <summary>Expone en OpenAPI el mismo requisito Bearer que exige la política global.</summary>
 public sealed class BearerSecurityTransformer : IOpenApiDocumentTransformer
 {
+    /// <summary>Añade al documento OpenAPI el esquema Bearer y sus requisitos de seguridad.</summary>
     public Task TransformAsync(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
     {
         document.Components ??= new();

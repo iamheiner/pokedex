@@ -21,6 +21,7 @@ namespace Pokemon.Tests.Battle;
 [Trait("Category", "Postgres")]
 public sealed class PostgresBattleTests
 {
+    /// <summary>Comprueba que las migraciones pueden repetirse y ejecutarse desde conexiones concurrentes sin duplicarse.</summary>
     [PostgresFact]
     public async Task MigrationIsIdempotentAndSafeAcrossConcurrentConnections()
     {
@@ -34,6 +35,7 @@ public sealed class PostgresBattleTests
         Assert.Equal(5L, await constraint.ExecuteScalarAsync());
     }
 
+    /// <summary>Comprueba que una nueva conexión recupera y continúa exactamente el estado de partida guardado.</summary>
     [PostgresFact]
     public async Task NewDataSourceRecoversAndContinuesTheExactSavedState()
     {
@@ -51,6 +53,7 @@ public sealed class PostgresBattleTests
         Assert.Equal(JsonSerializer.Serialize(next), JsonSerializer.Serialize(await store.Get(next.Id, default)));
     }
 
+    /// <summary>Comprueba que distintas instancias aceptan un único turno concurrente y consumen una sola muestra aleatoria.</summary>
     [PostgresFact]
     public async Task IndependentStoresAcceptOneConcurrentTurnAndOneRandomDraw()
     {
@@ -78,6 +81,7 @@ public sealed class PostgresBattleTests
         Assert.Single((await stores[0].Get(battle.Id, default)).Turns);
     }
 
+    /// <summary>Comprueba que excepciones y cancelaciones revierten los cambios sobre la fila de partida.</summary>
     [PostgresFact]
     public async Task ExceptionAndCancellationRollBackWithoutChangingTheRow()
     {
@@ -93,6 +97,7 @@ public sealed class PostgresBattleTests
         await Assert.ThrowsAsync<BattleNotFoundException>(() => store.Get(Guid.NewGuid(), default));
     }
 
+    /// <summary>Comprueba que bloquear una partida no bloquea otra y que cancelar la espera no guarda ningún turno.</summary>
     [PostgresFact]
     public async Task LockingOneBattleDoesNotBlockAnotherAndCancelledWaitLeavesNoTurn()
     {
@@ -111,6 +116,7 @@ public sealed class PostgresBattleTests
         Assert.Equal(1, (await store.Get(first.Id, default)).Version);
     }
 
+    /// <summary>Comprueba que las restricciones y el lector rechazan documentos corruptos y versiones nulas.</summary>
     [PostgresFact]
     public async Task CorruptDocumentsAndNullVersionsAreRejected()
     {
@@ -125,6 +131,7 @@ public sealed class PostgresBattleTests
         await Assert.ThrowsAsync<InvalidDataException>(() => store.Get(battle.Id, default));
     }
 
+    /// <summary>Comprueba que una partida terminada conserva su resultado y rechaza nuevas acciones al reconectar.</summary>
     [PostgresFact]
     public async Task FinishedBattleSurvivesReconnectionAndStillRejectsActions()
     {
@@ -139,6 +146,7 @@ public sealed class PostgresBattleTests
             b => b.PlayTurn(b.First.Snapshot.Id, null, b.Version, 100), default));
     }
 
+    /// <summary>Comprueba que una nueva instancia de la API recupera y continúa una partida persistida.</summary>
     [PostgresFact]
     public async Task FreshApiHostReadsExistingBattleAndContinuesIt()
     {
@@ -167,12 +175,14 @@ public sealed class PostgresBattleTests
 
     private sealed class DatabaseApiFactory(string connection) : WebApplicationFactory<Program>
     {
+        /// <summary>Configura el cliente del host PostgreSQL de pruebas con un token válido.</summary>
         protected override void ConfigureClient(HttpClient client)
         {
             base.ConfigureClient(client);
             Authentication.TestTokens.Authorize(client);
         }
 
+        /// <summary>Configura el host HTTP de pruebas para utilizar PostgreSQL y los metadatos de autenticación locales.</summary>
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Production");
@@ -185,6 +195,7 @@ public sealed class PostgresBattleTests
 
 public sealed class PostgresFactAttribute : FactAttribute
 {
+    /// <summary>Omite explícitamente la prueba PostgreSQL cuando no se ha configurado su conexión.</summary>
     public PostgresFactAttribute()
     {
         if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("POKEMON_POSTGRES_TEST_CONNECTION")))
@@ -198,9 +209,11 @@ internal sealed class TestDatabase : IAsyncDisposable
     public string ConnectionString { get; }
     private readonly NpgsqlDataSource admin;
     private readonly string schema;
+    /// <summary>Conserva el esquema temporal y crea su origen de conexiones para las pruebas PostgreSQL.</summary>
     private TestDatabase(NpgsqlDataSource admin, string connection, string schema)
     { this.admin = admin; this.schema = schema; ConnectionString = connection; Source = NpgsqlDataSource.Create(connection); }
 
+    /// <summary>Crea un esquema PostgreSQL aislado y aplica opcionalmente las migraciones de partidas.</summary>
     public static async Task<TestDatabase> Create(bool migrate = true)
     {
         var connection = Environment.GetEnvironmentVariable("POKEMON_POSTGRES_TEST_CONNECTION")
@@ -217,6 +230,7 @@ internal sealed class TestDatabase : IAsyncDisposable
         }
         catch { await database.DisposeAsync(); throw; }
     }
+    /// <summary>Libera las conexiones y elimina únicamente el esquema temporal generado por esta prueba.</summary>
     public async ValueTask DisposeAsync()
     {
         await Source.DisposeAsync();

@@ -8,6 +8,7 @@ namespace Pokemon.Application.Feature.Pokedex.Commands;
 /// <summary>Obtiene los hechos necesarios para construir agregados; el dominio protege las invariantes.</summary>
 internal static class PokedexChanges
 {
+    /// <summary>Construye un movimiento válido y comprueba que su nombre no esté ocupado por otra entrada.</summary>
     public static async Task<CatalogMove> MoveAsync(IReadRepositoryScope data, Guid id, MoveInput input, CancellationToken token)
     {
         if (input is null) throw new PokedexRuleException("Move data is required.");
@@ -16,6 +17,7 @@ internal static class PokedexChanges
             throw new PokedexConflictException("A catalog entry with this name already exists.");
         return move;
     }
+    /// <summary>Construye una especie y valida referencias, unicidad y compatibilidad con sus ejemplares existentes.</summary>
     public static async Task<Species> SpeciesAsync(IReadRepositoryScope data, Guid id, SpeciesInput input, CancellationToken token)
     {
         if (input?.Stats is null || input.Learnset is null || input.Learnset.Any(entry => entry is null))
@@ -29,6 +31,7 @@ internal static class PokedexChanges
         LearningPolicy.EnsureCompatible(species, await data.GetReader<IOwnedPokemonReader>().FindBySpeciesAsync(id, token));
         return species;
     }
+    /// <summary>Recupera la especie y construye un ejemplar con salud, nivel y aprendizaje válidos.</summary>
     public static async Task<OwnedPokemon> PokemonAsync(IReadRepositoryScope data, Guid id, PokemonInput input, CancellationToken token)
     {
         if (input is null) throw new PokedexRuleException("Pokemon data is required.");

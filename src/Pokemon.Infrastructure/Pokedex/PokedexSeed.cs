@@ -7,7 +7,9 @@ namespace Pokemon.Infrastructure.Pokedex;
 /// <summary>Datos de demostración; fuentes y simplificaciones en docs/pokedex.md.</summary>
 internal static class PokedexSeed
 {
+    /// <summary>Genera un identificador estable a partir del número asignado a cada dato inicial.</summary>
     private static Guid Id(int number) => Guid.Parse($"00000000-0000-0000-0000-{number:000000000000}");
+    /// <summary>Guarda el catálogo inicial de movimientos, especies y ejemplares mediante los repositorios de la operación.</summary>
     public static async Task PopulateAsync(IRepositoryScope data, CancellationToken token)
     {
         await data.GetRepository<IMoveRepository>().SaveAsync(new CatalogMove(Id(1), "Scratch", 40, PokemonType.Normal), token);

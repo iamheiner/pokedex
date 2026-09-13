@@ -3,6 +3,7 @@ namespace Pokemon.Tests;
 
 public sealed class DamageFormulaTests
 {
+    /// <summary>Comprueba la fórmula con estadísticas distintas para detectar factores intercambiados.</summary>
     [Theory]
     [InlineData(1, 37, 91, 13, 85, 0)]
     [InlineData(7, 83, 47, 65, 100, 11)]
@@ -18,6 +19,7 @@ public sealed class DamageFormulaTests
         Assert.Equal(expected, DamageCalculator.Calculate(attacker, move, defender, random).Damage);
     }
 
+    /// <summary>Comprueba que el dominio rechaza movimientos no aprendidos incluso sin pasar por Application.</summary>
     [Fact]
     public void RejectsUnlearnedMoveEvenWhenCalledWithoutApplication()
     {
@@ -25,6 +27,7 @@ public sealed class DamageFormulaTests
         Assert.Throws<ArgumentException>(() => DamageCalculator.Calculate(Create(50, 52, 43), move, Create(50, 48, 65), 100));
     }
 
+    /// <summary>Comprueba que alterar la potencia de un movimiento aprendido invalida su selección.</summary>
     [Fact]
     public void RejectsChangedPowerOfLearnedMove()
     {
@@ -33,6 +36,7 @@ public sealed class DamageFormulaTests
         Assert.Throws<ArgumentException>(() => DamageCalculator.Calculate(Create(50, 52, 43, learned), forged, Create(50, 48, 65), 100));
     }
 
+    /// <summary>Comprueba que los movimientos con los mismos valores se reconocen como equivalentes.</summary>
     [Fact]
     public void EqualMoveValuesAreRecognized()
     {
@@ -41,6 +45,7 @@ public sealed class DamageFormulaTests
         Assert.Equal(14, DamageCalculator.Calculate(Create(50, 52, 43, learned), equivalent, Create(50, 48, 65), 100).Damage);
     }
 
+    /// <summary>Comprueba que aumentar el factor aleatorio válido nunca reduce el daño calculado.</summary>
     [Fact]
     public void EveryAllowedRandomFactorProducesMonotonicDamage()
     {
@@ -57,6 +62,7 @@ public sealed class DamageFormulaTests
         }
     }
 
+    /// <summary>Construye un participante con nivel, ataque y defensa configurables para probar la fórmula.</summary>
     private static Combatant Create(int level, int attack, int defense, params Move[] moves) =>
         new(Guid.NewGuid(), "Example", level, PokemonType.Normal, 100, 100, attack, defense, 71, 89, 55, moves);
 }

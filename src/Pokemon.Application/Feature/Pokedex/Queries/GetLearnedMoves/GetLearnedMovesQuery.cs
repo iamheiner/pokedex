@@ -10,6 +10,7 @@ public sealed record GetLearnedMovesQuery(Guid Id) : IQuery<PokemonView>;
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
 public sealed class GetLearnedMovesQueryHandler(IReadSession reader) : IRequestHandler<GetLearnedMovesQuery, PokemonView>
 {
+    /// <summary>Devuelve el ejemplar solicitado junto con sus cuatro movimientos aprendidos.</summary>
     public Task<PokemonView> Handle(GetLearnedMovesQuery request, CancellationToken token) =>
         reader.ReadAsync<PokemonView>(async data =>
         {

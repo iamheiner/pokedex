@@ -11,6 +11,7 @@ public sealed record UpdateMoveCommand(Guid Id, MoveInput Data) : ICommand<MoveV
 /// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
 public sealed class UpdateMoveCommandHandler(IUnitOfWork transactions) : IRequestHandler<UpdateMoveCommand, MoveView>
 {
+    /// <summary>Valida y reemplaza los datos de un movimiento existente dentro de una transacción.</summary>
     public Task<MoveView> Handle(UpdateMoveCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

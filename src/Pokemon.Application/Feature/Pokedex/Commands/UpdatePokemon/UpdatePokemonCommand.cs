@@ -11,6 +11,7 @@ public sealed record UpdatePokemonCommand(Guid Id, PokemonInput Data) : ICommand
 /// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
 public sealed class UpdatePokemonCommandHandler(IUnitOfWork transactions) : IRequestHandler<UpdatePokemonCommand, PokemonView>
 {
+    /// <summary>Valida y reemplaza los datos de un ejemplar existente dentro de una transacción.</summary>
     public Task<PokemonView> Handle(UpdatePokemonCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

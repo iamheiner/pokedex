@@ -11,6 +11,7 @@ public sealed record DeletePokemonCommand(Guid Id) : ICommand<Unit>;
 /// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
 public sealed class DeletePokemonCommandHandler(IUnitOfWork transactions) : IRequestHandler<DeletePokemonCommand, Unit>
 {
+    /// <summary>Elimina el ejemplar indicado después de comprobar que existe.</summary>
     public Task<Unit> Handle(DeletePokemonCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

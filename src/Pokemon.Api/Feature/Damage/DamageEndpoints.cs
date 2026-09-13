@@ -9,6 +9,7 @@ namespace Pokemon.Api.Feature.Damage;
 /// <summary>Traduce las peticiones HTTP de daño al caso de uso y sus errores a HTTP 400.</summary>
 public static class DamageEndpoints
 {
+    /// <summary>Registra el cálculo de daño y sus ejemplos y respuestas en la documentación OpenAPI.</summary>
     public static IEndpointRouteBuilder MapDamageEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/damage", Calculate)
@@ -29,6 +30,7 @@ public static class DamageEndpoints
         return endpoints;
     }
 
+    /// <summary>Transforma la petición HTTP, solicita el cálculo mediante MediatR y devuelve el resultado.</summary>
     private static async Task<IResult> Calculate(DamageRequest request, ISender sender, CancellationToken cancellationToken)
     {
         CalculateDamageQuery query;

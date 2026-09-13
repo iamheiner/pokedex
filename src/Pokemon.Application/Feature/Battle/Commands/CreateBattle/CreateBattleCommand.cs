@@ -15,6 +15,7 @@ public sealed record CreateBattleCommand(CreateBattleInput Data) : ICommand<Batt
 public sealed class CreateBattleCommandHandler(IUnitOfWork transactions)
     : IRequestHandler<CreateBattleCommand, BattleView>
 {
+    /// <summary>Crea y guarda una partida a partir de dos ejemplares dentro de una única unidad de trabajo.</summary>
     public async Task<BattleView> Handle(CreateBattleCommand request, CancellationToken token)
     {
         var input = request.Data;

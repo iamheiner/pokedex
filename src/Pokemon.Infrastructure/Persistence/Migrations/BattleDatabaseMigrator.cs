@@ -5,6 +5,7 @@ namespace Pokemon.Infrastructure.Persistence.Migrations;
 /// <summary>Migración versionada y atómica. Conserva el historial y nunca reinicializa datos existentes.</summary>
 internal sealed class BattleDatabaseMigrator(DatabaseConnectionFactory connections)
 {
+    /// <summary>Aplica la migración de partidas una sola vez y coordina los arranques simultáneos.</summary>
     public async Task Migrate(CancellationToken token)
     {
         await using var session = await connections.BeginAsync(IsolationLevel.ReadCommitted, token);

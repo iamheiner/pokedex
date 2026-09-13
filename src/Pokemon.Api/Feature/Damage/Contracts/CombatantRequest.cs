@@ -8,6 +8,7 @@ public sealed record CombatantRequest(Guid Id, string Name, int Level, PokemonTy
     int CurrentHealth, int TotalHealth, int Attack, int Defense, int SpecialAttack,
     int SpecialDefense, int Speed, MoveRequest[] Moves)
 {
+    /// <summary>Convierte los datos HTTP del participante a un Combatant validado por el dominio.</summary>
     public Combatant ToDomain()
     {
         ArgumentNullException.ThrowIfNull(Moves);

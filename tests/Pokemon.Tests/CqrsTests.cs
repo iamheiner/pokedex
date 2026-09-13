@@ -18,6 +18,7 @@ namespace Pokemon.Tests;
 
 public sealed class CqrsTests
 {
+    /// <summary>Comprueba que MediatR resuelve el handler y emite una traza vinculada a la petición original.</summary>
     [Theory]
     [InlineData("Flame", "success")]
     [InlineData("Unknown", "invalid")]
@@ -54,6 +55,7 @@ public sealed class CqrsTests
         Assert.Equal(outcome, span.GetTagItem("request.outcome"));
     }
 
+    /// <summary>Comprueba que una consulta cancelada no ejecuta el cálculo ni consume azar.</summary>
     [Fact]
     public async Task CancelledQueryDoesNotCalculateDamage()
     {
@@ -66,6 +68,7 @@ public sealed class CqrsTests
         Assert.Equal(0, random.Calls);
     }
 
+    /// <summary>Comprueba que el pipeline propaga los fallos inesperados del caso de uso.</summary>
     [Fact]
     public async Task UnexpectedFailureIsPropagatedThroughPipeline()
     {
@@ -74,6 +77,7 @@ public sealed class CqrsTests
             provider.GetRequiredService<ISender>().Send(Query("Flame")));
     }
 
+    /// <summary>Construye el contenedor de pruebas con MediatR, persistencia simulada y azar controlado.</summary>
     private static ServiceProvider Build(IDamageRandom random)
     {
         var services = new ServiceCollection();
@@ -85,6 +89,7 @@ public sealed class CqrsTests
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }
 
+    /// <summary>Construye una consulta de daño con participantes conocidos y el nombre de movimiento indicado.</summary>
     private static CalculateDamageQuery Query(string moveName)
     {
         var move = new Move("Flame", 100, PokemonType.Fire);
@@ -98,11 +103,13 @@ public sealed class CqrsTests
     private sealed class CountingRandom : IDamageRandom
     {
         public int Calls { get; private set; }
+        /// <summary>Cuenta la solicitud de azar y devuelve el factor fijo 85 para la prueba.</summary>
         public int Next() { Calls++; return 85; }
     }
 
     private sealed class BrokenRandom : IDamageRandom
     {
+        /// <summary>Simula un fallo inesperado al solicitar un factor aleatorio.</summary>
         public int Next() => throw new InvalidOperationException("Test failure");
     }
 }

@@ -11,6 +11,7 @@ public sealed record UpdateSpeciesCommand(Guid Id, SpeciesInput Data) : ICommand
 /// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
 public sealed class UpdateSpeciesCommandHandler(IUnitOfWork transactions) : IRequestHandler<UpdateSpeciesCommand, SpeciesView>
 {
+    /// <summary>Valida y reemplaza una especie sin invalidar el aprendizaje de sus ejemplares.</summary>
     public Task<SpeciesView> Handle(UpdateSpeciesCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

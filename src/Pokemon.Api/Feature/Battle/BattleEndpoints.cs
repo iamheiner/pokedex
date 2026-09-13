@@ -9,6 +9,7 @@ namespace Pokemon.Api.Feature.Battle;
 /// <summary>API de partidas; las reglas de combate y concurrencia pertenecen a los casos de uso y al dominio.</summary>
 public static class BattleEndpoints
 {
+    /// <summary>Registra las rutas HTTP para crear partidas, consultar su estado y resolver turnos mediante MediatR.</summary>
     public static void MapBattleEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/battles").WithTags("Battle")

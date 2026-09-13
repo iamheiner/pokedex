@@ -10,6 +10,7 @@ public sealed record GetPokemonSharingMoveQuery(Guid Id, int Offset = 0, int Lim
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
 public sealed class GetPokemonSharingMoveQueryHandler(IReadSession reader) : IRequestHandler<GetPokemonSharingMoveQuery, IReadOnlyList<PokemonView>>
 {
+    /// <summary>Devuelve una página de ejemplares que tienen aprendido el movimiento solicitado.</summary>
     public Task<IReadOnlyList<PokemonView>> Handle(GetPokemonSharingMoveQuery request, CancellationToken token) =>
         reader.ReadAsync<IReadOnlyList<PokemonView>>(async data =>
         {

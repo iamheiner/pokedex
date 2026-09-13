@@ -5,6 +5,7 @@ namespace Pokemon.Infrastructure.Persistence.Migrations;
 /// <summary>Migración versionada y atómica. Conserva el historial y nunca reinicializa datos existentes.</summary>
 internal sealed class PokedexDatabaseMigrator(DatabaseConnectionFactory connections)
 {
+    /// <summary>Inicializa el esquema y el catálogo de Pokédex una sola vez dentro de una transacción.</summary>
     public async Task Migrate(CancellationToken token)
     {
         await using var session = await connections.BeginAsync(IsolationLevel.ReadCommitted, token);

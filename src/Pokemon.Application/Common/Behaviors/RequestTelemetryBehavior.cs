@@ -21,6 +21,7 @@ namespace Pokemon.Application.Common.Behaviors;
 public sealed class RequestTelemetryBehavior<TRequest, TResponse>(ILogger<RequestTelemetryBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
+    /// <summary>Mide la duración y el resultado del caso de uso y emite trazas, métricas y logs correlacionados.</summary>
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         var name = typeof(TRequest).Name;

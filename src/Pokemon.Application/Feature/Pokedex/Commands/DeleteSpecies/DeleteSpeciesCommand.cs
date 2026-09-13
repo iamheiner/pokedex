@@ -12,6 +12,7 @@ public sealed record DeleteSpeciesCommand(Guid Id) : ICommand<Unit>;
 /// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
 public sealed class DeleteSpeciesCommandHandler(IUnitOfWork transactions) : IRequestHandler<DeleteSpeciesCommand, Unit>
 {
+    /// <summary>Elimina una especie existente si ningún ejemplar la referencia.</summary>
     public Task<Unit> Handle(DeleteSpeciesCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

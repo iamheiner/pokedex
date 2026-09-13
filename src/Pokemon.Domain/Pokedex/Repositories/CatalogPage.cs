@@ -6,6 +6,7 @@ public sealed record CatalogPage
 {
     public int Offset { get; }
     public int Limit { get; }
+    /// <summary>Define una página con desplazamiento no negativo y un límite de entre 1 y 100 elementos.</summary>
     public CatalogPage(int offset = 0, int limit = 100)
     {
         if (offset < 0 || limit is < 1 or > 100)

@@ -29,8 +29,10 @@ internal static class BattleMapping
         return new(pokemon, moves);
     }
 
+    /// <summary>Convierte el agregado de partida en una respuesta con participantes, versión, resultado e historial.</summary>
     public static BattleView View(BattleAggregate battle) => new(battle.Id, battle.Version, battle.Phase,
         battle.NextPokemonId, battle.WinnerId, battle.IsDraw, View(battle.First), View(battle.Second), battle.Turns);
+    /// <summary>Proyecta el estado de un participante y los usos disponibles de sus movimientos.</summary>
     private static BattlePokemonView View(BattlePokemon participant)
     {
         var p = participant.Snapshot;

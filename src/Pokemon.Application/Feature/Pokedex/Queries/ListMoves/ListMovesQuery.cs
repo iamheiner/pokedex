@@ -10,6 +10,7 @@ public sealed record ListMovesQuery(int Offset = 0, int Limit = 100) : IQuery<IR
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
 public sealed class ListMovesQueryHandler(IReadSession reader) : IRequestHandler<ListMovesQuery, IReadOnlyList<MoveView>>
 {
+    /// <summary>Devuelve la página solicitada de movimientos del catálogo.</summary>
     public Task<IReadOnlyList<MoveView>> Handle(ListMovesQuery request, CancellationToken token) =>
         reader.ReadAsync<IReadOnlyList<MoveView>>(async data =>
         {

@@ -10,6 +10,7 @@ namespace Pokemon.Api.Feature.Pokedex.Species;
 /// <summary>Adaptadores HTTP del recurso species; MediatR ejecuta los casos de uso.</summary>
 public static class SpeciesEndpoints
 {
+    /// <summary>Registra las rutas de consulta y mantenimiento de especies mediante MediatR.</summary>
     public static void MapSpeciesEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/species").WithTags("Pokedex - Species")

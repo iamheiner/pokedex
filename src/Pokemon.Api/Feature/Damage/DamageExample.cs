@@ -6,6 +6,7 @@ namespace Pokemon.Api.Feature.Damage;
 // Una única fuente de ejemplos para Scalar y pruebas, incluida en la imagen publicada.
 internal static class DamageExample
 {
+    /// <summary>Carga los ejemplos de daño del recurso JSON incluido en la aplicación.</summary>
     internal static Dictionary<string, IOpenApiExample> Load()
     {
         using var stream = typeof(DamageExample).Assembly.GetManifestResourceStream("DamageExamples.json")

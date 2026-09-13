@@ -11,10 +11,12 @@ public sealed class InMemoryUnitOfWork : IUnitOfWork, IReadSession, IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private Snapshot state = new();
+    /// <summary>Inicializa la unidad de trabajo de prueba y carga opcionalmente el catálogo inicial.</summary>
     public InMemoryUnitOfWork(bool seed = true)
     {
         if (seed) PokedexSeed.PopulateAsync(state, default).GetAwaiter().GetResult();
     }
+    /// <summary>Ejecuta una consulta sobre una copia coherente del estado de prueba sin publicar modificaciones.</summary>
     public async Task<T> ReadAsync<T>(Func<IReadRepositoryScope, Task<T>> query, CancellationToken token)
     {
         await gate.WaitAsync(token);
@@ -22,6 +24,7 @@ public sealed class InMemoryUnitOfWork : IUnitOfWork, IReadSession, IDisposable
         try { token.ThrowIfCancellationRequested(); return await query(snapshot); }
         finally { snapshot.Close(); gate.Release(); }
     }
+    /// <summary>Ejecuta un comando sobre una copia y publica su estado solo si termina sin errores ni cancelación.</summary>
     public async Task<T> WriteAsync<T>(Func<IRepositoryScope, Task<T>> command, CancellationToken token)
     {
         await gate.WaitAsync(token);
@@ -36,6 +39,7 @@ public sealed class InMemoryUnitOfWork : IUnitOfWork, IReadSession, IDisposable
         }
         finally { snapshot.Close(); gate.Release(); }
     }
+    /// <summary>Libera el semáforo que coordina las operaciones de la unidad de trabajo de prueba.</summary>
     public void Dispose() => gate.Dispose();
     private sealed class Snapshot(bool readOnly = false) : IRepositoryScope
     {
@@ -44,14 +48,19 @@ public sealed class InMemoryUnitOfWork : IUnitOfWork, IReadSession, IDisposable
         private InMemorySpeciesRepository? species;
         private InMemoryOwnedPokemonRepository? pokemon;
         private SessionBattleRepository? battles;
+        /// <summary>Rechaza el acceso a una copia transaccional de prueba que ya está cerrada.</summary>
         private void Ensure() => ObjectDisposedException.ThrowIf(closed, this);
+        /// <summary>Marca la copia transaccional de prueba como cerrada.</summary>
         public void Close() => closed = true;
+        /// <summary>Obtiene un lector de la copia transaccional utilizada por la prueba.</summary>
         public TReader GetReader<TReader>() where TReader : class, IReadRepository => Resolve<TReader>();
+        /// <summary>Obtiene un escritor de prueba y rechaza su resolución en una copia de solo lectura.</summary>
         public TRepository GetRepository<TRepository>() where TRepository : class, IWriteRepository
         {
             if (readOnly) throw new InvalidOperationException("A read session cannot resolve write repositories.");
             return Resolve<TRepository>();
         }
+        /// <summary>Crea o reutiliza el doble de repositorio correspondiente al contrato solicitado.</summary>
         private T Resolve<T>() where T : class
         {
             Ensure();
@@ -65,6 +74,7 @@ public sealed class InMemoryUnitOfWork : IUnitOfWork, IReadSession, IDisposable
             };
             return (T)value;
         }
+        /// <summary>Copia los agregados inmutables a un nuevo estado transaccional independiente.</summary>
         public Snapshot Copy(bool readOnly = false)
         {
             var copy = new Snapshot(readOnly);

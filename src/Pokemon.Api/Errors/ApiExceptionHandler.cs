@@ -15,6 +15,7 @@ namespace Pokemon.Api.Errors;
 /// <summary>Ofrece un contrato de error uniforme sin revelar detalles de fallos internos.</summary>
 public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExceptionHandler
 {
+    /// <summary>Traduce una excepción a ProblemDetails con el estado HTTP correspondiente y oculta detalles internos.</summary>
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         var status = exception switch

@@ -9,6 +9,7 @@ namespace Pokemon.Tests.Pokedex;
 
 public sealed class PokedexUnitOfWorkTests
 {
+    /// <summary>Comprueba que los tres repositorios de catálogo publican sus cambios o los revierten conjuntamente.</summary>
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -20,6 +21,7 @@ public sealed class PokedexUnitOfWorkTests
         var species = new Species(Guid.NewGuid(), "Species", PokemonType.Normal,
             new BaseStats(40, 40, 40, 40, 40, 40), moves.Select(move => new LearnableMove(move.Id, 1)));
         var pokemon = new OwnedPokemon(Guid.NewGuid(), species, "Pokemon", 20, 40, 40, moves.Select(move => move.Id));
+        // Guarda los tres tipos de agregado de prueba y provoca un fallo si el escenario requiere rollback.
         async Task Execute() => await unitOfWork.WriteAsync(async session =>
         {
             foreach (var move in moves) await session.GetRepository<IMoveRepository>().SaveAsync(move, default);

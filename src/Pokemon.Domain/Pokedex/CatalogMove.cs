@@ -10,6 +10,7 @@ public sealed class CatalogMove
     public string Name { get; }
     public int Power { get; }
     public PokemonType Type { get; }
+    /// <summary>Construye un movimiento del catálogo validando identidad, nombre, potencia y tipo.</summary>
     public CatalogMove(Guid id, string name, int power, PokemonType type)
     {
         PokedexGuard.Identity(id);
@@ -17,5 +18,6 @@ public sealed class CatalogMove
         PokedexGuard.Require(Enum.IsDefined(type), "Unknown move type.");
         Id = id; Name = PokedexGuard.Name(name); Power = power; Type = type;
     }
+    /// <summary>Convierte el movimiento del catálogo al objeto valor utilizado por la calculadora de daño.</summary>
     public Move ToDamageMove() => new(Name, Power, Type);
 }

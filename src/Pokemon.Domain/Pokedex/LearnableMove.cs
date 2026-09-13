@@ -5,6 +5,7 @@ public sealed record LearnableMove
 {
     public Guid MoveId { get; }
     public int Level { get; }
+    /// <summary>Define un movimiento aprendible validando su identidad y el nivel mínimo entre 1 y 100.</summary>
     public LearnableMove(Guid moveId, int level)
     {
         PokedexGuard.Identity(moveId);

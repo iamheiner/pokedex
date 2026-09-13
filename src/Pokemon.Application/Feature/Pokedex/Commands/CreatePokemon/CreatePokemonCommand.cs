@@ -11,6 +11,7 @@ public sealed record CreatePokemonCommand(PokemonInput Data) : ICommand<PokemonV
 /// <summary>Coordina reglas y persistencia del agregado en una única transacción.</summary>
 public sealed class CreatePokemonCommandHandler(IUnitOfWork transactions) : IRequestHandler<CreatePokemonCommand, PokemonView>
 {
+    /// <summary>Valida, guarda y devuelve un nuevo ejemplar dentro de una transacción.</summary>
     public Task<PokemonView> Handle(CreatePokemonCommand request, CancellationToken token) =>
         transactions.WriteAsync(async data =>
         {

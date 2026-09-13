@@ -7,9 +7,11 @@ namespace Pokemon.Tests;
 
 public class DamageTests
 {
+    /// <summary>Construye un participante de tipo configurable con estadísticas fijas para las pruebas de daño.</summary>
     private static Combatant Create(PokemonType type, params Move[] moves) =>
         new(Guid.NewGuid(), "Example", 50, type, 100, 100, 100, 100, 100, 100, 100, moves);
 
+    /// <summary>Comprueba que se usa el tipo del movimiento y que el daño se redondea hacia abajo.</summary>
     [Theory]
     [InlineData(PokemonType.Grass, 100, 88)]
     [InlineData(PokemonType.Grass, 85, 74)]
@@ -25,6 +27,7 @@ public class DamageTests
         Assert.Equal(100, defender.CurrentHealth);
     }
 
+    /// <summary>Comprueba que una inmunidad del defensor produce daño cero.</summary>
     [Fact]
     public void ImmunityProducesZeroDamage()
     {
@@ -33,6 +36,7 @@ public class DamageTests
             Create(PokemonType.Ground), 100).Damage);
     }
 
+    /// <summary>Comprueba que se rechazan factores aleatorios fuera del intervalo permitido.</summary>
     [Theory]
     [InlineData(84)]
     [InlineData(101)]
@@ -43,6 +47,7 @@ public class DamageTests
             Create(PokemonType.Normal, move), move, Create(PokemonType.Normal), factor));
     }
 
+    /// <summary>Comprueba que se rechaza un movimiento que el atacante no conoce.</summary>
     [Fact]
     public async Task RejectsUnknownMove()
     {
@@ -51,6 +56,7 @@ public class DamageTests
             new CalculateDamageQuery(Create(PokemonType.Fire), "Flame", Create(PokemonType.Grass)), CancellationToken.None));
     }
 
+    /// <summary>Comprueba que el caso de uso utiliza el proveedor aleatorio inyectado.</summary>
     [Fact]
     public async Task ApplicationUsesInjectedRandom()
     {
@@ -61,6 +67,7 @@ public class DamageTests
         Assert.Equal(85, result.RandomFactor);
     }
 
+    /// <summary>Comprueba que la colección de movimientos del agregado no puede modificarse desde fuera.</summary>
     [Fact]
     public void AggregateProtectsItsMoveCollection()
     {
@@ -73,6 +80,7 @@ public class DamageTests
         Assert.Throws<ArgumentException>(() => Create(PokemonType.Normal, original[0], original[0]));
     }
 
+    /// <summary>Comprueba que el dominio rechaza una defensa igual a cero.</summary>
     [Fact]
     public void RejectsZeroDefense()
     {
@@ -82,6 +90,7 @@ public class DamageTests
 
     private sealed class FixedRandom : IDamageRandom
     {
+        /// <summary>Devuelve el factor fijo 85 para obtener resultados reproducibles.</summary>
         public int Next() => 85;
     }
 }

@@ -5,6 +5,7 @@ namespace Pokemon.Tests;
 
 public sealed class TypeEffectivenessTests
 {
+    /// <summary>Carga los casos independientes de efectividad entre tipos de movimiento y defensor.</summary>
     public static IEnumerable<object[]> Matchups()
     {
         var lines = File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, "Data", "type-chart.csv"));
@@ -17,11 +18,13 @@ public sealed class TypeEffectivenessTests
         }
     }
 
+    /// <summary>Comprueba que la efectividad calculada coincide con la tabla esperada del enunciado.</summary>
     [Theory]
     [MemberData(nameof(Matchups))]
     public void MatchesEnunciado(PokemonType attack, PokemonType defense, decimal expected) =>
         Assert.Equal(expected, TypeEffectiveness.Against(attack, defense));
 
+    /// <summary>Comprueba que los datos de prueba contienen exactamente una vez cada combinación de tipos.</summary>
     [Fact]
     public void FixtureCoversEveryPairExactlyOnce()
     {
@@ -34,6 +37,7 @@ public sealed class TypeEffectivenessTests
                 Assert.Contains((attack, defense), pairs);
     }
 
+    /// <summary>Comprueba que la tabla de efectividad rechaza tipos desconocidos.</summary>
     [Theory]
     [InlineData(-1, 0)]
     [InlineData(0, 999)]

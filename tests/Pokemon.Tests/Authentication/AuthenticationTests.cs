@@ -10,6 +10,7 @@ namespace Pokemon.Tests.Authentication;
 
 public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
+    /// <summary>Comprueba que los endpoints protegidos rechazan peticiones anónimas antes de ejecutar su operación.</summary>
     [Fact]
     public async Task Every_mapped_endpoint_rejects_anonymous_requests_before_executing()
     {
@@ -42,6 +43,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         }
     }
 
+    /// <summary>Comprueba que los tokens inválidos se rechazan según las reglas de validación JWT.</summary>
     [Theory]
     [InlineData("expired")]
     [InlineData("issuer")]
@@ -74,6 +76,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.DoesNotContain("error_description", response.Headers.WwwAuthenticate.ToString());
     }
 
+    /// <summary>Comprueba que pasar un token por la URL o una cookie no autentica las operaciones de negocio.</summary>
     [Fact]
     public async Task Tokens_in_query_strings_or_cookies_do_not_authenticate()
     {
@@ -83,6 +86,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/pokemon?access_token=" + TestTokens.Create())).StatusCode);
     }
 
+    /// <summary>Comprueba que las sondas de salud responden a peticiones anónimas sin solicitar autenticación.</summary>
     [Theory]
     [InlineData("/health")]
     [InlineData("/health/ready")]
@@ -95,6 +99,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.Empty(response.Headers.WwwAuthenticate);
     }
 
+    /// <summary>Comprueba que una devolución OIDC falsificada no puede crear una sesión de documentación.</summary>
     [Fact]
     public async Task Forged_oidc_callback_cannot_create_a_session()
     {
@@ -107,6 +112,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/pokemon")).StatusCode);
     }
 
+    /// <summary>Comprueba que la cookie de documentación no permite acceder a endpoints de negocio.</summary>
     [Fact]
     public async Task Documentation_cookie_cannot_authorize_business_endpoints()
     {
@@ -129,6 +135,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/battles", null)).StatusCode);
     }
 
+    /// <summary>Comprueba que las respuestas de documentación protegida impiden su almacenamiento en caché.</summary>
     [Theory]
     [InlineData("/scalar/v1")]
     [InlineData("/openapi/v1.json")]
@@ -141,6 +148,7 @@ public sealed class AuthenticationTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync(path)).StatusCode);
     }
 
+    /// <summary>Comprueba que un token válido permite consultar la documentación y sus requisitos de seguridad.</summary>
     [Fact]
     public async Task Valid_token_opens_documentation_with_security_requirements()
     {

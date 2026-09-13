@@ -8,6 +8,7 @@ namespace Pokemon.Infrastructure.Persistence;
 internal sealed class DatabaseUnitOfWork(DatabaseConnectionFactory connections, RepositoryRegistry? registrations = null) : IUnitOfWork, IReadSession
 {
     private readonly RepositoryRegistry registry = registrations ?? RepositoryRegistry.CreateDefault();
+    /// <summary>Ejecuta una consulta en una transacción de solo lectura con aislamiento repetible.</summary>
     public async Task<T> ReadAsync<T>(Func<IReadRepositoryScope, Task<T>> query, CancellationToken token)
     {
         await using var session = await connections.BeginAsync(IsolationLevel.RepeatableRead, token);
@@ -16,6 +17,7 @@ internal sealed class DatabaseUnitOfWork(DatabaseConnectionFactory connections, 
         await session.CommitAsync(token);
         return result;
     }
+    /// <summary>Ejecuta y confirma un comando completo o revierte sus cambios si la operación falla.</summary>
     public async Task<T> WriteAsync<T>(Func<IRepositoryScope, Task<T>> command, CancellationToken token)
     {
         await using var session = await connections.BeginAsync(IsolationLevel.ReadCommitted, token);

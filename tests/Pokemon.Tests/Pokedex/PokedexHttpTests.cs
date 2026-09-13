@@ -15,18 +15,24 @@ public sealed class PokedexHttpTests
     {
         Converters = { new JsonStringEnumConverter() }
     };
+    /// <summary>Genera identificadores estables de los datos iniciales utilizados por las pruebas de Pokédex.</summary>
     private static Guid Id(int n) => Guid.Parse($"00000000-0000-0000-0000-{n:000000000000}");
+    /// <summary>Construye una petición válida de creación para el recurso de Pokédex solicitado.</summary>
     private static object Input(string resource) => resource switch
     {
         "moves" => new MoveInput("Test move", 75, PokemonType.Water),
         "species" => new SpeciesInput("Test species", PokemonType.Fire, new(50, 60, 70, 80, 90, 100), [new(Id(1), 1)]),
         _ => new PokemonInput(Id(101), "Test pokemon", 20, 30, 39, [Id(1), Id(2), Id(3), Id(4)])
     };
+    /// <summary>Convierte la petición de ejemplo en un objeto JSON editable para probar errores de entrada.</summary>
     private static JsonObject Node(string resource) => JsonSerializer.SerializeToNode(Input(resource), Json)!.AsObject();
+    /// <summary>Envía una petición HTTP con el método, la ruta y el cuerpo JSON indicados.</summary>
     private static Task<HttpResponseMessage> Send(HttpClient client, HttpMethod method, string path, object body) =>
         client.SendAsync(new HttpRequestMessage(method, path) { Content = new StringContent(JsonSerializer.Serialize(body, Json), Encoding.UTF8, "application/json") });
+    /// <summary>Deserializa el cuerpo de una respuesta HTTP como un objeto JSON.</summary>
     private static async Task<JsonObject> Body(HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<JsonObject>())!;
+    /// <summary>Valida el estado, el tipo de contenido y el identificador de traza del error HTTP.</summary>
     private static async Task Problem(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode);
@@ -36,6 +42,7 @@ public sealed class PokedexHttpTests
         Assert.False(string.IsNullOrWhiteSpace((string?)problem["traceId"]));
     }
 
+    /// <summary>Comprueba el ciclo de creación, lectura, actualización y eliminación y los errores por recursos ausentes.</summary>
     [Theory]
     [InlineData("moves")]
     [InlineData("species")]
@@ -62,6 +69,7 @@ public sealed class PokedexHttpTests
         Assert.Equal(initial, (await client.GetFromJsonAsync<JsonArray>($"/{resource}"))!.Count);
     }
 
+    /// <summary>Enumera los campos obligatorios de los contratos HTTP de Pokédex, incluidos los objetos anidados.</summary>
     public static IEnumerable<object[]> MandatoryFields()
     {
         foreach (var resource in new[] { "moves", "species", "pokemon" })
@@ -73,6 +81,7 @@ public sealed class PokedexHttpTests
             yield return [resource, "learnset.0.level"];
         }
     }
+    /// <summary>Comprueba que la omisión de campos obligatorios no se sustituye por valores predeterminados.</summary>
     [Theory]
     [MemberData(nameof(MandatoryFields))]
     public async Task MissingFieldsNeverBecomeImplicitDefaults(string resource, string field)
@@ -85,6 +94,7 @@ public sealed class PokedexHttpTests
         await Problem(await Send(client, HttpMethod.Post, $"/{resource}", input), HttpStatusCode.BadRequest);
     }
 
+    /// <summary>Comprueba que el catálogo inicial tiene cinco especies y cinco ejemplares con cuatro movimientos aprendidos.</summary>
     [Fact]
     public async Task SeedHasFiveSpeciesAndFivePokemonWithFourLearnedMoves()
     {
@@ -106,6 +116,7 @@ public sealed class PokedexHttpTests
         Assert.Contains(future.Moves, m => m.Move.Name == "Flamethrower" && m.Level == 24); // No filtrar por nivel actual20.
     }
 
+    /// <summary>Comprueba que el contrato de ejemplares exige exactamente cuatro movimientos.</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -118,6 +129,7 @@ public sealed class PokedexHttpTests
         await Problem(await Send(client, HttpMethod.Post, "/pokemon", input), HttpStatusCode.BadRequest);
     }
 
+    /// <summary>Comprueba que entradas inválidas de aprendizaje, nivel o salud conservan el ejemplar anterior.</summary>
     [Theory]
     [InlineData("duplicate")]
     [InlineData("unlearnable")]
@@ -147,6 +159,7 @@ public sealed class PokedexHttpTests
         Assert.Equal(before, await client.GetStringAsync(path));
     }
 
+    /// <summary>Comprueba que las consultas inversas distinguen movimientos aprendidos y posibles y admiten resultados vacíos.</summary>
     [Fact]
     public async Task InverseQueriesDistinguishLearnedFromPossibleAndReturnEmptyForUnusedMove()
     {
@@ -161,6 +174,7 @@ public sealed class PokedexHttpTests
         await Problem(await client.GetAsync($"/moves/{Guid.NewGuid()}/pokemon"), HttpStatusCode.NotFound);
     }
 
+    /// <summary>Comprueba que las referencias impiden eliminaciones y cambios de aprendizaje que dejarían datos inválidos.</summary>
     [Fact]
     public async Task ReferentialIntegrityRejectsDeletesAndDestructiveLearnsetUpdates()
     {
@@ -175,6 +189,7 @@ public sealed class PokedexHttpTests
         Assert.Equal(4, learned.Moves.Count);
     }
 
+    /// <summary>Comprueba que editar un movimiento se refleja en los ejemplares que mantienen su referencia.</summary>
     [Fact]
     public async Task CatalogEditsAreVisibleThroughStableReferences()
     {
@@ -186,6 +201,7 @@ public sealed class PokedexHttpTests
         Assert.Equal("Updated scratch", move.Name); Assert.Equal(45, move.Power);
     }
 
+    /// <summary>Comprueba que altas concurrentes con el mismo nombre solo confirman una creación.</summary>
     [Fact]
     public async Task ConcurrentDuplicateCreatesCommitExactlyOnce()
     {
@@ -197,6 +213,7 @@ public sealed class PokedexHttpTests
         await Problem(await Send(client, HttpMethod.Post, "/moves", padded), HttpStatusCode.Conflict);
     }
 
+    /// <summary>Comprueba que OpenAPI contiene todas las rutas y operaciones de Pokédex.</summary>
     [Fact]
     public async Task OpenApiDocumentsEveryPokedexRoute()
     {
@@ -213,6 +230,7 @@ public sealed class PokedexHttpTests
         Assert.NotNull(spec["paths"]!["/moves/{id}/pokemon"]);
         Assert.NotNull(spec["paths"]!["/moves/{id}/species"]);
     }
+    /// <summary>Comprueba que quitar referencias permite eliminar recursos sin dejar relaciones huérfanas.</summary>
     [Fact]
     public async Task RemovingReferencesAllowsDeletionWithoutLeavingOrphans()
     {
@@ -228,6 +246,7 @@ public sealed class PokedexHttpTests
         Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync($"/species/{speciesId}")).StatusCode);
     }
 
+    /// <summary>Comprueba que editar estadísticas de especie conserva la salud individual del ejemplar.</summary>
     [Fact]
     public async Task UpdatingSpeciesChangesBaseStatsButPreservesIndividualHealth()
     {
@@ -240,12 +259,14 @@ public sealed class PokedexHttpTests
         Assert.Equal(100, pokemon.Stats.Attack); Assert.Equal(39, pokemon.CurrentHealth); Assert.Equal(39, pokemon.TotalHealth);
     }
 
+    /// <summary>Comprueba que un ejemplar puede usarse para calcular daño sin modificar su salud persistida.</summary>
     [Fact]
     public async Task PokemonCanBeUsedInExistingDamageCalculatorWithoutChangingStoredHealth()
     {
         using var factory = new ApiFactory(); using var client = factory.CreateClient();
         var attacker = (await client.GetFromJsonAsync<PokemonView>($"/pokemon/{Id(202)}", Json))!;
         var defender = (await client.GetFromJsonAsync<PokemonView>($"/pokemon/{Id(201)}", Json))!;
+        // Proyecta un ejemplar de Pokédex al cuerpo HTTP de participante requerido por la calculadora.
         static object Snapshot(PokemonView p) => new
         {
             p.Id,
@@ -267,6 +288,7 @@ public sealed class PokedexHttpTests
         Assert.Equal(39, (await client.GetFromJsonAsync<PokemonView>($"/pokemon/{Id(201)}", Json))!.CurrentHealth);
     }
 
+    /// <summary>Comprueba que nombres o tipos inválidos devuelven errores de validación.</summary>
     [Theory]
     [InlineData("moves", "type", "Unknown")]
     [InlineData("moves", "name", " ")]
@@ -279,6 +301,7 @@ public sealed class PokedexHttpTests
         await Problem(await Send(client, HttpMethod.Post, $"/{resource}", input), HttpStatusCode.BadRequest);
     }
 
+    /// <summary>Comprueba que los ejemplos de Scalar pueden enviarse a los tres endpoints de creación.</summary>
     [Fact]
     public async Task ScalarExamplesCanBeSubmittedToAllCreateEndpoints()
     {
@@ -292,6 +315,7 @@ public sealed class PokedexHttpTests
         }
     }
 
+    /// <summary>Comprueba la estabilidad de las páginas, los resultados vacíos y el rechazo de límites inválidos.</summary>
     [Theory]
     [InlineData("moves")]
     [InlineData("species")]

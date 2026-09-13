@@ -13,6 +13,7 @@ namespace Pokemon.Infrastructure;
 /// <summary>Composición del adaptador. PostgreSQL es el único almacenamiento de la aplicación.</summary>
 public static class DependencyInjection
 {
+    /// <summary>Registra PostgreSQL, la unidad de trabajo común, las fábricas de repositorios y las migraciones.</summary>
     public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHealthChecks();
@@ -35,10 +36,12 @@ public static class DependencyInjection
 /// <summary>No acepta peticiones hasta que el esquema esté listo; un fallo de base de datos no activa memoria silenciosamente.</summary>
 internal sealed class PersistenceMigrationService(BattleDatabaseMigrator migrator, PokedexDatabaseMigrator pokedex) : IHostedService
 {
+    /// <summary>Aplica las migraciones de partidas y Pokédex antes de que el servicio acepte peticiones.</summary>
     public async Task StartAsync(CancellationToken token)
     {
         await migrator.Migrate(token);
         await pokedex.Migrate(token);
     }
+    /// <summary>Completa la parada del servicio de migraciones, que no mantiene tareas en segundo plano.</summary>
     public Task StopAsync(CancellationToken token) => Task.CompletedTask;
 }

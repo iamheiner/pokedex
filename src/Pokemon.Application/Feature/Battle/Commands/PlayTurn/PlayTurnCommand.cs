@@ -17,6 +17,7 @@ public sealed record PlayTurnCommand(Guid BattleId, PlayTurnInput Data) : IComma
 public sealed class PlayTurnCommandHandler(IUnitOfWork transactions, IDamageRandom random)
     : IRequestHandler<PlayTurnCommand, BattleView>
 {
+    /// <summary>Valida y resuelve un turno atómico, obteniendo azar solo después de comprobar la versión y la acción.</summary>
     public async Task<BattleView> Handle(PlayTurnCommand request, CancellationToken token)
     {
         var input = request.Data;

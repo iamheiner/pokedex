@@ -16,7 +16,9 @@ namespace Pokemon.Tests.Battle;
 public sealed class BattleHttpTests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
+    /// <summary>Genera el identificador estable de un ejemplar del catálogo utilizado por la prueba.</summary>
     private static Guid Id(int n) => Guid.Parse($"00000000-0000-0000-0000-{n:000000000000}");
+    /// <summary>Crea una partida por HTTP y valida el estado de creación y la cabecera Location.</summary>
     private static async Task<BattleView> Create(HttpClient client)
     {
         var response = await client.PostAsJsonAsync("/battles", new CreateBattleInput(Id(201), Id(202)));
@@ -25,19 +27,23 @@ public sealed class BattleHttpTests
         Assert.Equal($"/battles/{battle.Id}", response.Headers.Location!.ToString());
         return battle;
     }
+    /// <summary>Envía por HTTP la siguiente acción válida de la partida.</summary>
     private static Task<HttpResponseMessage> Act(HttpClient client, BattleView battle) =>
         client.PostAsJsonAsync($"/battles/{battle.Id}/turns", Input(battle));
+    /// <summary>Construye la acción del siguiente actor seleccionando un movimiento disponible o esfuerzo.</summary>
     private static PlayTurnInput Input(BattleView battle)
     {
         var actor = battle.NextPokemonId == battle.First.Id ? battle.First : battle.Second;
         return new(actor.Id, actor.Moves.FirstOrDefault(m => m.RemainingUses > 0)?.Id, battle.Version);
     }
+    /// <summary>Valida el estado y el contenido ProblemDetails de una respuesta HTTP de combate.</summary>
     private static async Task Problem(HttpResponseMessage response, HttpStatusCode status)
     {
         Assert.Equal(status, response.StatusCode); Assert.Equal("application/problem+json", response.Content.Headers.ContentType!.MediaType);
         var problem = (await response.Content.ReadFromJsonAsync<JsonObject>())!;
         Assert.Equal((int)status, (int)problem["status"]!); Assert.False(string.IsNullOrWhiteSpace((string?)problem["traceId"]));
     }
+    /// <summary>Comprueba por HTTP que cada turno queda guardado hasta que termina la partida por salud cero.</summary>
     [Fact]
     public async Task FullBattlePersistsEveryTurnUntilHealthReachesZero()
     {
@@ -61,6 +67,7 @@ public sealed class BattleHttpTests
         await Problem(await client.PostAsJsonAsync($"/battles/{battle.Id}/turns", new PlayTurnInput(battle.First.Id, battle.First.Moves[0].Id, battle.Version)), HttpStatusCode.Conflict);
         Assert.Equal(before, await client.GetStringAsync($"/pokemon/{Id(201)}"));
     }
+    /// <summary>Comprueba que la versión y el actor impiden ataques duplicados o fuera de turno.</summary>
     [Fact]
     public async Task VersionAndActorRejectDuplicateOrOutOfTurnAttacks()
     {
@@ -75,6 +82,7 @@ public sealed class BattleHttpTests
         await Problem(await client.PostAsJsonAsync($"/battles/{battle.Id}/turns", input with { ExpectedVersion = 2 }), HttpStatusCode.Conflict);
         Assert.Equal(2, (await client.GetFromJsonAsync<BattleView>($"/battles/{battle.Id}", Json))!.Version);
     }
+    /// <summary>Comprueba que turnos HTTP idénticos concurrentes producen un solo golpe y una sola muestra aleatoria.</summary>
     [Fact]
     public async Task ConcurrentIdenticalTurnsProduceOneHitAndOneRandomSample()
     {
@@ -88,6 +96,7 @@ public sealed class BattleHttpTests
         var saved = (await client.GetFromJsonAsync<BattleView>($"/battles/{battle.Id}", Json))!;
         Assert.Single(saved.Turns); Assert.Equal(2, saved.Version);
     }
+    /// <summary>Comprueba que editar o eliminar datos del catálogo no cambia una partida ya creada.</summary>
     [Fact]
     public async Task CatalogChangesAndDeletionDoNotChangeAnExistingBattle()
     {
@@ -99,6 +108,7 @@ public sealed class BattleHttpTests
         Assert.Equal(HttpStatusCode.OK, (await Act(client, battle)).StatusCode);
         await Problem(await client.GetAsync($"/pokemon/{Id(201)}"), HttpStatusCode.NotFound);
     }
+    /// <summary>Comprueba que dos partidas con los mismos ejemplares mantienen salud y usos independientes.</summary>
     [Fact]
     public async Task TwoBattlesWithTheSamePokemonHaveIndependentHealthAndUses()
     {
@@ -108,6 +118,7 @@ public sealed class BattleHttpTests
         var untouched = (await client.GetFromJsonAsync<BattleView>($"/battles/{second.Id}", Json))!;
         Assert.Equal(1, untouched.Version); Assert.Equal(44, untouched.Second.CurrentHealth); Assert.All(untouched.First.Moves, m => Assert.Equal(5, m.RemainingUses));
     }
+    /// <summary>Comprueba que crear una partida requiere enviar las dos identidades de participantes.</summary>
     [Theory]
     [InlineData("firstPokemonId")]
     [InlineData("secondPokemonId")]
@@ -117,6 +128,7 @@ public sealed class BattleHttpTests
         var input = JsonSerializer.SerializeToNode(new CreateBattleInput(Id(201), Id(202)), Json)!.AsObject(); input.Remove(missing);
         await Problem(await client.PostAsJsonAsync("/battles", input), HttpStatusCode.BadRequest);
     }
+    /// <summary>Comprueba que una acción requiere todos sus campos, incluido el identificador de movimiento anulable.</summary>
     [Theory]
     [InlineData("pokemonId")]
     [InlineData("moveId")]
@@ -127,6 +139,7 @@ public sealed class BattleHttpTests
         var input = JsonSerializer.SerializeToNode(Input(battle), Json)!.AsObject(); input.Remove(missing);
         await Problem(await client.PostAsJsonAsync($"/battles/{battle.Id}/turns", input), HttpStatusCode.BadRequest);
     }
+    /// <summary>Comprueba que participantes inválidos o sin salud no pueden iniciar una partida por HTTP.</summary>
     [Fact]
     public async Task InvalidParticipantsAndFaintedPokemonCannotStart()
     {
@@ -138,6 +151,7 @@ public sealed class BattleHttpTests
         { speciesId = Id(101), name = "Fainted", level = 20, currentHealth = 0, totalHealth = 39, moveIds = new[] { Id(1), Id(2), Id(3), Id(4) } })).StatusCode);
         await Problem(await client.PostAsJsonAsync("/battles", new CreateBattleInput(Id(201), Id(202))), HttpStatusCode.BadRequest);
     }
+    /// <summary>Comprueba que movimientos desconocidos, esfuerzo prematuro y versiones inválidas no avanzan la partida.</summary>
     [Fact]
     public async Task UnknownMovePrematureStruggleAndInvalidVersionDoNotAdvance()
     {
@@ -149,6 +163,7 @@ public sealed class BattleHttpTests
         await Problem(await client.PostAsJsonAsync($"/battles/{Guid.NewGuid()}/turns", Input(battle)), HttpStatusCode.NotFound);
         Assert.Equal(1, (await client.GetFromJsonAsync<BattleView>($"/battles/{battle.Id}", Json))!.Version);
     }
+    /// <summary>Comprueba que un fallo del azar revierte el turno y devuelve un error interno sin detalles sensibles.</summary>
     [Fact]
     public async Task InternalRandomFailureReturnsSanitized500AndRollsBack()
     {
@@ -160,6 +175,7 @@ public sealed class BattleHttpTests
         Assert.DoesNotContain("ArgumentOutOfRange", await response.Content.ReadAsStringAsync());
         Assert.Equal(1, (await client.GetFromJsonAsync<BattleView>($"/battles/{battle.Id}", Json))!.Version);
     }
+    /// <summary>Comprueba que el ejemplo OpenAPI crea una partida y que su fase se representa como texto.</summary>
     [Fact]
     public async Task OpenApiCreationExampleIsExecutableAndPhaseIsAString()
     {
@@ -171,6 +187,7 @@ public sealed class BattleHttpTests
         var body = (await response.Content.ReadFromJsonAsync<JsonObject>())!; Assert.Equal("AwaitingAction", (string?)body["phase"]);
         Assert.NotNull(spec["paths"]!["/battles/{id}/turns"]!["post"]);
     }
+    /// <summary>Comprueba que agotar los movimientos habilita esfuerzo sin solicitar nuevas muestras aleatorias.</summary>
     [Fact]
     public async Task ExhaustedMovesEnableNullMoveOverHttpAndDoNotDrawMoreRandomNumbers()
     {
@@ -198,6 +215,7 @@ public sealed class BattleHttpTests
     private sealed class CountingRandom : IDamageRandom
     {
         public int Calls;
+        /// <summary>Cuenta de forma segura las solicitudes de azar y devuelve el factor fijo 100.</summary>
         public int Next() { Interlocked.Increment(ref Calls); return 100; }
     }
 }

@@ -29,6 +29,7 @@ public static class TypeEffectiveness
         [PokemonType.Fairy] = new([PokemonType.Fighting, PokemonType.Dragon, PokemonType.Dark], [PokemonType.Fire, PokemonType.Poison, PokemonType.Steel], []),
     };
 
+    /// <summary>Valida al inicializar que la tabla cubra todos los tipos sin combinaciones contradictorias.</summary>
     static TypeEffectiveness()
     {
         // Si se amplía el enum, una fila ausente o contradictoria falla explícitamente.

@@ -10,6 +10,7 @@ public sealed record ListSpeciesQuery(int Offset = 0, int Limit = 100) : IQuery<
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
 public sealed class ListSpeciesQueryHandler(IReadSession reader) : IRequestHandler<ListSpeciesQuery, IReadOnlyList<SpeciesView>>
 {
+    /// <summary>Devuelve la página solicitada de especies con sus planes de aprendizaje.</summary>
     public Task<IReadOnlyList<SpeciesView>> Handle(ListSpeciesQuery request, CancellationToken token) =>
         reader.ReadAsync<IReadOnlyList<SpeciesView>>(async data =>
         {

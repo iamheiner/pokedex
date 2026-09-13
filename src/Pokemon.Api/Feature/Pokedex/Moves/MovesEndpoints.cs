@@ -12,6 +12,7 @@ namespace Pokemon.Api.Feature.Pokedex.Moves;
 /// <summary>Adaptadores HTTP del recurso moves; MediatR ejecuta los casos de uso.</summary>
 public static class MovesEndpoints
 {
+    /// <summary>Registra las rutas de movimientos y sus consultas inversas mediante MediatR.</summary>
     public static void MapMovesEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/moves").WithTags("Pokedex - Moves")
