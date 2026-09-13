@@ -1,12 +1,13 @@
 param([string]$BaseUrl = 'http://localhost:5080')
 $ErrorActionPreference = 'Stop'
+. "$PSScriptRoot/authentication.ps1"
 $BaseUrl = $BaseUrl.TrimEnd('/')
 $prefix = 'smoke-' + [Guid]::NewGuid().ToString('N')
 $moveIds = [Collections.Generic.List[string]]::new()
 $speciesId = $null
 $pokemonId = $null
 function Request($method, $path, $body, $expected) {
-    $options = @{ Method = $method; Uri = "$BaseUrl$path"; SkipHttpErrorCheck = $true }
+    $options = @{ Method = $method; Uri = "$BaseUrl$path"; SkipHttpErrorCheck = $true; Headers = (Get-PokemonAuthorizationHeaders); TimeoutSec = 20 }
     if ($null -ne $body) { $options.ContentType = 'application/json'; $options.Body = $body | ConvertTo-Json -Depth 15 }
     $response = Invoke-WebRequest @options
     $text = if ($response.Content -is [byte[]]) { [Text.Encoding]::UTF8.GetString($response.Content) } else { $response.Content }

@@ -1,5 +1,7 @@
 # Partidas duraderas con PostgreSQL
 
+Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+
 Las partidas se almacenan en PostgreSQL 17. Se recuperan por su mismo identificador después de reiniciar la API o recrear el contenedor de base de datos conservando su volumen. Se guardan participantes, características, movimientos, salud, usos, versión, resultado e historial.
 
 La Pokédex conserva su adaptador en memoria. Sus ediciones se pierden al reiniciar, pero una partida existente sigue funcionando porque conserva sus propias copias de los adversarios. El cambio de persistencia de partidas no altera el contrato de los tres endpoints de combate.
@@ -20,6 +22,9 @@ Para ejecutar la API con `dotnet run` y la base de datos en Docker, el override 
 ```powershell
 docker compose -f compose.yaml -f compose.dev.yaml up -d postgres
 $env:ConnectionStrings__Battles = 'Host=localhost;Port=54329;Database=pokemon;Username=pokemon;Password=pokemon_local_only;GSS Encryption Mode=Disable'
+docker compose up -d --wait keycloak
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
+$env:Authentication__DocumentationClientSecret = 'pokemon_docs_local_only'
 dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true
 ```
 

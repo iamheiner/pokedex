@@ -1,5 +1,7 @@
 # Ejercicio 3: combate por turnos
 
+Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+
 Una partida enfrenta dos ejemplares de la Pokédex. Al crearla se copian sus características, salud y cuatro movimientos. A partir de ese momento la partida conserva su propia salud: combatir no daña los ejemplares de la colección y editar o eliminar su ficha no cambia una partida ya iniciada.
 
 ## Contrato HTTP

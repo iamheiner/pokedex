@@ -45,3 +45,5 @@ git merge --no-ff release/1.0.0
 Los comandos anteriores son una guía; no se ha creado una release ni una etiqueta de entrega. Un hotfix parte de main, se verifica y se integra en main y develop con una nueva versión de parche.
 
 Se usa Git estándar; no hace falta instalar una extensión Git Flow. Cuando exista un remoto, se integrará preferentemente mediante pull requests con pruebas obligatorias y main como rama principal. Las protecciones del remoto todavía no están configuradas.
+
+La integración de seguridad se desarrolla en `feature/keycloak`, basada en `feature/battle` porque utiliza las partidas persistentes. Para integrar estas ramas: primero `feature/battle` en `develop` y después `feature/keycloak`, ambas con `--no-ff`. Todavía no se han integrado ni creado una release.

@@ -14,7 +14,16 @@ jobs:
           global-json-file: global.json
       - run: dotnet restore PokemonTwo.slnx --locked-mode
       - run: dotnet test PokemonTwo.slnx -c Release --no-restore --filter "Category!=Postgres"
-      - run: docker build --tag pokemon-api:verify .
+      - run: docker compose build api
       - run: docker compose run --build --rm postgres-tests
+      - run: docker compose up -d --wait api
+      - name: Verify real Keycloak authentication and OIDC
+        shell: pwsh
+        env:
+          POKEMON_CLIENT_SECRET: pokemon_client_local_only
+          POKEMON_TRAINER_PASSWORD: trainer_local_only
+        run: |
+          ./scripts/verify-authentication.ps1
+          ./scripts/verify-documentation-login.ps1
       - if: always()
         run: docker compose down

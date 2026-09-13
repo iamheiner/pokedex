@@ -193,9 +193,16 @@ public sealed class HttpContractTests : IClassFixture<ApiFactory>
 
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        Authentication.TestTokens.Authorize(client);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Production");
+        Authentication.TestTokens.Configure(builder);
         builder.UseSetting("BattlePersistence:Provider", "Memory");
         builder.UseSetting("ApiDocumentation:Enabled", "true");
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "");

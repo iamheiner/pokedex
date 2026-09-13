@@ -1,5 +1,7 @@
 # Recorrido de la prueba técnica
 
+Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+
 El backend reúne los tres ejercicios en una solución y un arranque Docker. Scalar permite inspeccionar y ejecutar el contrato; Aspire muestra las trazas y logs. No hay frontend de juego.
 
 | Ejercicio | Implementación | Evidencia y explicación |

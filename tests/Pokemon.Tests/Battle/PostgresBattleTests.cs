@@ -163,9 +163,16 @@ public sealed class PostgresBattleTests
 
     private sealed class DatabaseApiFactory(string connection) : WebApplicationFactory<Program>
     {
+        protected override void ConfigureClient(HttpClient client)
+        {
+            base.ConfigureClient(client);
+            Authentication.TestTokens.Authorize(client);
+        }
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Production");
+            Authentication.TestTokens.Configure(builder);
             builder.UseSetting("BattlePersistence:Provider", "Postgres");
             builder.UseSetting("ConnectionStrings:Battles", connection);
             builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "");

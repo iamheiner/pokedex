@@ -1,5 +1,7 @@
 # Ejercicio 2: Pokédex
 
+Los ejemplos HTTP requieren un token Bearer de Keycloak. Antes de ejecutar los scripts, configura `POKEMON_CLIENT_SECRET` o `POKEMON_ACCESS_TOKEN` como explica [autenticación](autenticacion.md). Scalar dispone de login interactivo.
+
 Una especie es la ficha común de un Pokémon, como Charmander. Un ejemplar es uno concreto de tu colección, con nombre, nivel, salud y cuatro ataques elegidos. El catálogo de movimientos describe los ataques. El plan de aprendizaje relaciona una especie con los ataques que puede aprender y el nivel mínimo de cada uno.
 
 ## Recursos y requisitos
@@ -26,10 +28,10 @@ Arranca según el README y abre Scalar. Encontrarás los grupos Pokedex - Specie
 
 ```powershell
 $api = 'http://localhost:51966'
-Invoke-RestMethod "$api/species"
-Invoke-RestMethod "$api/pokemon/00000000-0000-0000-0000-000000000201/moves"
-Invoke-RestMethod "$api/pokemon/00000000-0000-0000-0000-000000000201/possible-moves"
-Invoke-RestMethod "$api/moves/00000000-0000-0000-0000-000000000001/pokemon"
+Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/species"
+Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/pokemon/00000000-0000-0000-0000-000000000201/moves"
+Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/pokemon/00000000-0000-0000-0000-000000000201/possible-moves"
+Invoke-RestMethod -Headers (Get-PokemonAuthorizationHeaders) "$api/moves/00000000-0000-0000-0000-000000000001/pokemon"
 ```
 
 El primer ejemplar es Charmander de nivel 20. Tiene Scratch, Ember, Dragon Breath y Fire Fang aprendidos. La consulta de posibles también devuelve Flamethrower, disponible desde nivel 24. Dragon Breath es de tipo Dragon, aunque Charmander sea Fire: coincidir en tipo no determina el aprendizaje.

@@ -1,3 +1,4 @@
+using Pokemon.Api.Feature.Authentication;
 using Pokemon.Api.Feature.Battle;
 using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Pokedex.Persistence;
@@ -7,7 +8,6 @@ using Pokemon.Api.Feature.Pokedex.Species;
 using Pokemon.Api.Feature.Pokedex.Pokemon;
 using System.Diagnostics;
 using Pokemon.Api.Errors;
-using Scalar.AspNetCore;
 using Pokemon.Api.Observability;
 using System.Text.Json.Serialization;
 using Pokemon.Application;
@@ -33,18 +33,29 @@ builder.Services.AddDamageFeature();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions["traceId"] = Activity.Current?.TraceId.ToString() ?? context.HttpContext.TraceIdentifier);
-builder.Services.AddOpenApi();
+builder.Services.AddApiAuthentication(builder.Configuration);
+if (DocumentationAuthentication.IsEnabled(builder.Environment, builder.Configuration))
+    builder.Services.AddDocumentationAuthentication(builder.Configuration);
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecurityTransformer>());
 builder.AddObservability();
 
 var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-// Scalar permite consultar y probar el contrato OpenAPI desde el navegador.
-if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("ApiDocumentation:Enabled"))
+app.Use(async (context, next) =>
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options => options.WithTitle("Pokémon API"));
-}
+    if (context.Request.Path.StartsWithSegments("/scalar") || context.Request.Path.StartsWithSegments("/openapi"))
+    {
+        context.Response.Headers.CacheControl = "no-store";
+        context.Response.Headers.Pragma = "no-cache";
+        context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    }
+    await next(context);
+});
+app.UseAuthentication();
+app.UseAuthorization();
+if (DocumentationAuthentication.IsEnabled(app.Environment, app.Configuration))
+    app.MapProtectedDocumentation();
 app.MapHealthEndpoints();
 app.MapDamageEndpoints();
 app.MapBattleEndpoints();

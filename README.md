@@ -1,12 +1,14 @@
 # Pokémon: daño, Pokédex y combate
 
-Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
+Backend de los **tres ejercicios** de la prueba técnica, con .NET 10, DDD, CQRS/MediatR, Docker, Keycloak, Scalar y OpenTelemetry. Incluye cálculo de daño, Pokédex con CRUD de especies, movimientos y ejemplares, y partidas por turnos hasta alcanzar salud cero. El [recorrido de entrega](docs/entrega.md) relaciona cada requisito con su implementación y verificación.
 
 La Pokédex arranca con cinco especies y cinco ejemplares con cuatro movimientos cada uno. Las partidas se guardan en PostgreSQL y sobreviven al reinicio. La colección de la Pokédex sigue en memoria. Configuración y garantías en [persistencia](docs/persistencia.md).
 
+Todos los endpoints requieren autenticación con **Keycloak**, incluidas las sondas de salud y la documentación. Scalar redirige al login (usuario local `trainer`, contraseña `trainer_local_only`). Las operaciones de negocio exigen un access token Bearer. Configuración, ejemplos y límites en [autenticación](docs/autenticacion.md).
+
 ## Arranque con Docker
 
-Requiere Docker con contenedores Linux. Compose incluye PostgreSQL con volumen persistente.
+Requiere Docker con contenedores Linux. Compose incluye las bases PostgreSQL de partidas y de Keycloak con volúmenes persistentes.
 
 ```powershell
 # Opcional si el puerto predeterminado 5080 está ocupado:
@@ -18,9 +20,10 @@ docker compose up --build -d
 |---|---|---|
 | Scalar | http://localhost:5080/scalar/v1 | http://localhost:51966/scalar/v1 |
 | API | http://localhost:5080 | http://localhost:51966 |
+| Keycloak | http://localhost:18080 | http://localhost:18080 |
 | Aspire | http://localhost:18888 | http://localhost:18888 |
 
-En Scalar selecciona **Damage → Test Request** y uno de los seis ejemplos. Los grupos **Pokedex** permiten probar los CRUD y consultas; **Battle** permite crear partidas y resolver sus turnos. Los POST de creación incluyen ejemplos. El puerto de Aspire se configura mediante `ASPIRE_DASHBOARD_PORT`. Para detener los servicios: `docker compose down`.
+Después de iniciar sesión con Keycloak, en Scalar selecciona **Damage → Test Request** y uno de los seis ejemplos. Los grupos **Pokedex** permiten probar los CRUD y consultas; **Battle** permite crear partidas y resolver sus turnos. Los POST de creación incluyen ejemplos. El puerto de Aspire se configura mediante `ASPIRE_DASHBOARD_PORT`. Para detener los servicios: `docker compose down`.
 
 Compose habilita la documentación y el dashboard para uso local. La API y la UI solo se publican en loopback. OTLP circula por la red interna de Docker. El dashboard admite acceso anónimo y pierde los datos al reiniciarse; no es una configuración de publicación pública ni de retención de producción.
 
@@ -30,14 +33,20 @@ Requiere SDK .NET 10.0.302 o compatible según `global.json`.
 
 ```powershell
 dotnet test PokemonTwo.slnx -c Release --filter 'Category!=Postgres'
+docker compose up -d --wait keycloak
+$env:ASPNETCORE_ENVIRONMENT = 'Development'
+$env:Authentication__DocumentationClientSecret = 'pokemon_docs_local_only'
 # Ejecución efímera sin PostgreSQL; para persistencia local, consultar docs/persistencia.md.
 dotnet run --project src/Pokemon.Api --no-launch-profile --urls http://localhost:5080 --ApiDocumentation:Enabled=true --BattlePersistence:Provider=Memory
 ```
 
-Sin `OTEL_EXPORTER_OTLP_ENDPOINT` la API funciona sin collector. Para una demostración con Aspire, usar Compose.
+La URI de retorno del cliente de documentación debe coincidir con el puerto usado. Sin `OTEL_EXPORTER_OTLP_ENDPOINT` la API funciona sin collector. Para una demostración con Aspire, usar Compose.
 
 ```powershell
-curl.exe -H "Content-Type: application/json" --data-binary @docs/damage-request.json http://localhost:5080/damage
+$env:POKEMON_CLIENT_SECRET = 'pokemon_client_local_only'
+. ./scripts/authentication.ps1
+Invoke-RestMethod http://localhost:5080/damage -Method Post -Headers (Get-PokemonAuthorizationHeaders) `
+  -ContentType application/json -InFile docs/damage-request.json
 ```
 
 El ejemplo es Squirtle contra Charmander: efectividad 2, daño entre 33 y 39 y factor aleatorio entre 85 y 100. Los demás escenarios y sus fuentes están en [ejemplos](docs/ejemplos.md).
@@ -52,7 +61,7 @@ El ejemplo es Squirtle contra Charmander: efectividad 2, daño entre 33 y 39 y f
 
 Todos los campos del JSON son obligatorios. Tipos como `Fire` o `Water` se envían como texto. Un campo omitido no recibe un valor por defecto; se rechazan referencias nulas, propiedades desconocidas, valores fuera de rango y movimientos no aprendidos. Salud cero enviada explícitamente sí es válida para el cálculo teórico.
 
-Errores en formato `application/problem+json`, con `status`, `title`, `detail` y `traceId`: 400 para entrada inválida, 404 para recurso inexistente, 409 para duplicados o referencias en uso, 415 para tipo de contenido no admitido y 500 para fallos internos. El cliente no recibe detalles internos del servidor.
+Errores en formato `application/problem+json`, con `status`, `title`, `detail` y `traceId`: 401 para token ausente o inválido, 400 para entrada inválida, 404 para recurso inexistente, 409 para duplicados o referencias en uso, 415 para tipo de contenido no admitido y 500 para fallos internos. El cliente no recibe detalles internos del servidor.
 
 ## Estructura
 
