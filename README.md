@@ -220,6 +220,23 @@ El script elige movimientos, muestra las acciones, comprueba que la partida term
 
 ## Cómo está organizada la solución
 
+### Arquitectura elegida
+
+He optado por un **monolito modular**, organizado por funcionalidades y con una separación por capas inspirada en **Clean Architecture**. Daño, Pokédex y combate forman parte de una misma API desplegable y comparten PostgreSQL. Esta estructura permite arrancar y revisar los tres ejercicios juntos, mantener transacciones locales y ampliar cada funcionalidad de forma ordenada.
+
+La idea principal es que las dependencias apunten hacia las reglas de negocio. Application depende de Domain; Infrastructure implementa los contratos del dominio, y la API conecta ambas capas mediante inyección de dependencias. Por eso cambiar una consulta SQL o una ruta HTTP no exige modificar la fórmula de daño ni las reglas de un turno.
+
+### Por qué he usado estos patrones
+
+- **DDD para modelar las reglas.** Los agregados representan conceptos del problema y protegen sus invariantes. Por ejemplo, `OwnedPokemon` valida sus movimientos y `Battle` controla quién puede actuar y cuándo termina una partida. Así las reglas se conservan aunque cambie la forma de llamar a la aplicación.
+- **CQRS para separar los casos de uso.** Crear un ejemplar o jugar un turno son Commands; consultar movimientos o calcular daño son Queries. Cada operación tiene su handler, lo que facilita localizar su lógica y probarla. La separación es lógica: lecturas y escrituras utilizan la misma base de datos.
+- **Repository y Unit of Work para la persistencia.** Los repositorios expresan las operaciones sobre los agregados y la unidad de trabajo agrupa las escrituras que deben confirmarse juntas. Esto permite, por ejemplo, validar y guardar un turno sin dejar un estado parcialmente actualizado.
+- **SOLID para limitar responsabilidades y dependencias.** Los endpoints adaptan HTTP, los handlers coordinan y el dominio aplica las reglas. Los contratos de lectura y escritura están separados; los casos de uso reciben abstracciones que pueden sustituirse por dobles en las pruebas.
+
+Estas decisiones añaden interfaces y clases, pero permiten probar las reglas de forma aislada y mantener las integraciones externas fuera de los casos de uso. Los módulos son divisiones lógicas dentro del mismo despliegue; esta solución comparte ciclo de publicación y escalado.
+
+### Responsabilidad de cada capa
+
 He separado las responsabilidades en cuatro proyectos:
 
 ```text
