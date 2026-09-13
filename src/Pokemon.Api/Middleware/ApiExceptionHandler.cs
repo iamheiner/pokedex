@@ -1,21 +1,18 @@
-using Pokemon.Domain.Common.Exceptions;
-using Pokemon.Application.Feature.Pokedex.Exceptions;
-using Pokemon.Domain.Pokedex.Exceptions;
-using Pokemon.Domain.Battle.Exceptions;
-using Pokemon.Application.Feature.Battle;
-using Pokemon.Domain.Battle;
-using Pokemon.Application.Feature.Pokedex;
-using Pokemon.Domain.Pokedex;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Pokemon.Application.Common.Exceptions;
+using Pokemon.Application.Feature.Pokedex.Exceptions;
+using Pokemon.Domain.Battle.Exceptions;
+using Pokemon.Domain.Common.Exceptions;
+using Pokemon.Domain.Pokedex.Exceptions;
 
-namespace Pokemon.Api.Errors;
+namespace Pokemon.Api.Middleware;
 
-/// <summary>Ofrece un contrato de error uniforme sin revelar detalles de fallos internos.</summary>
+/// <summary>
+/// Ofrece un contrato de error uniforme sin revelar detalles de fallos internos.
+/// </summary>
 public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExceptionHandler
 {
-    /// <summary>Traduce una excepción a ProblemDetails con el estado HTTP correspondiente y oculta detalles internos.</summary>
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         var status = exception switch
@@ -34,7 +31,11 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExce
             ProblemDetails = new ProblemDetails
             {
                 Status = status,
-                Title = status switch { 400 => "Invalid request", 404 => "Resource not found", 409 => "Resource conflict", 415 => "Unsupported media type", _ => "Request failed" },
+                Title = status switch { 400 => "Invalid request", 
+                                        404 => "Resource not found", 
+                                        409 => "Resource conflict", 
+                                        415 => "Unsupported media type", 
+                                          _ => "Request failed" },
                 Detail = exception switch
                 {
                     InvalidDamageRequestException validation => validation.Message,

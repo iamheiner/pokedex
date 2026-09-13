@@ -6,7 +6,7 @@ using Pokemon.Api.Feature.Pokedex.Moves;
 using Pokemon.Api.Feature.Pokedex.Species;
 using Pokemon.Api.Feature.Pokedex.Pokemon;
 using System.Diagnostics;
-using Pokemon.Api.Errors;
+using Pokemon.Api.Middleware;
 using Pokemon.Api.Observability;
 using System.Text.Json.Serialization;
 using Pokemon.Application;

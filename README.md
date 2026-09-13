@@ -80,7 +80,7 @@ src/
     Pokedex/                     # Repositorios PostgreSQL, unidad de trabajo y migración inicial
     Battle/                      # Repositorio PostgreSQL, formato durable y migraciones
   Pokemon.Api/
-    Errors/                      # Contrato uniforme de errores HTTP
+    Middleware/                  # Contrato uniforme de errores HTTP
     Feature/Damage/              # Endpoint, contratos y seis ejemplos
     Feature/Pokedex/             # HTTP de Species, Moves y Pokemon
     Feature/Battle/              # Contrato HTTP de partidas y turnos
@@ -90,7 +90,7 @@ src/
 tests/Pokemon.Tests/            # Dominio, matriz, CQRS y HTTP real
 ```
 
-Flujo: HTTP → ISender → comportamiento de telemetría → handler de Command/Query → dominio y puerto de almacenamiento. Domain no depende de ASP.NET, MediatR ni OpenTelemetry. Los agregados protegen sus invariantes; los handlers coordinan cada caso de uso. La organización por Feature admite nuevos casos de uso sin acumularlos en Program.cs. Cada operación HTTP dispone de su propio archivo en `Commands` o `Queries` dentro de su recurso, con métodos documentados para registrar la ruta y atender la petición. Véase la [organización de endpoints](docs/endpoints.md).
+Flujo: HTTP → ISender → comportamiento de telemetría → handler de Command/Query → dominio y puerto de almacenamiento. Domain no depende de ASP.NET, MediatR ni OpenTelemetry. Los agregados protegen sus invariantes; los handlers coordinan cada caso de uso. La organización por Feature admite nuevos casos de uso sin acumularlos en Program.cs. Cada operación HTTP dispone de su propio archivo en `Commands` o `Queries` dentro de su recurso, con métodos separados para registrar la ruta y atender la petición. Véase la [organización de endpoints](docs/endpoints.md).
 
 ## Decisiones principales
 
