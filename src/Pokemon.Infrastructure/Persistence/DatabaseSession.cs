@@ -7,7 +7,7 @@ namespace Pokemon.Infrastructure.Persistence;
 internal sealed class DatabaseSession(NpgsqlConnection connection, NpgsqlTransaction transaction) : IAsyncDisposable
 {
     private bool completed;
-    private void EnsureActive() => ObjectDisposedException.ThrowIf(completed, this);
+    internal void EnsureActive() => ObjectDisposedException.ThrowIf(completed, this);
     public Task<IEnumerable<T>> QueryAsync<T>(string sql, object? parameters, CancellationToken token)
     {
         EnsureActive();

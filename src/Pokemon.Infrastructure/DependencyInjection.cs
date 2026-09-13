@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Infrastructure.Persistence;
 using Pokemon.Infrastructure.Persistence.Repositories;
 using Pokemon.Infrastructure.Persistence.Migrations;
@@ -20,11 +21,10 @@ public static class DependencyInjection
             throw new InvalidOperationException("ConnectionStrings:Battles is required for PostgreSQL. Use Docker Compose or configure the connection explicitly.");
         services.AddSingleton(_ => NpgsqlDataSource.Create(connection));
         services.AddSingleton<DatabaseConnectionFactory>();
-        services.AddSingleton<IBattleRepository, BattleRepository>();
-        services.AddSingleton<IBattleReader>(provider => provider.GetRequiredService<IBattleRepository>());
-        services.AddSingleton<PokedexSessionFactory>();
-        services.AddSingleton<IPokedexUnitOfWork>(provider => provider.GetRequiredService<PokedexSessionFactory>());
-        services.AddSingleton<IPokedexReadSession>(provider => provider.GetRequiredService<PokedexSessionFactory>());
+        services.AddSingleton(RepositoryRegistry.CreateDefault());
+        services.AddSingleton<DatabaseUnitOfWork>();
+        services.AddSingleton<IUnitOfWork>(provider => provider.GetRequiredService<DatabaseUnitOfWork>());
+        services.AddSingleton<IReadSession>(provider => provider.GetRequiredService<DatabaseUnitOfWork>());
         services.AddSingleton<PokedexDatabaseMigrator>();
         services.AddSingleton<BattleDatabaseMigrator>();
         services.AddHostedService<PersistenceMigrationService>();

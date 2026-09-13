@@ -1,7 +1,8 @@
+using Pokemon.Domain.Common.Persistence;
 namespace Pokemon.Domain.Pokedex.Repositories;
 
 /// <summary>Contrato de lectura selectiva; no expone escritura, SQL ni tecnología de almacenamiento.</summary>
-public interface ISpeciesReader
+public interface ISpeciesReader : IReadRepository
 {
     Task<Species?> FindAsync(Guid id, CancellationToken token);
     Task<IReadOnlyList<Species>> ListAsync(CatalogPage page, CancellationToken token);

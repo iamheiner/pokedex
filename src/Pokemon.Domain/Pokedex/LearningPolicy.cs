@@ -1,3 +1,4 @@
+using Pokemon.Domain.Pokedex.Exceptions;
 namespace Pokemon.Domain.Pokedex;
 
 /// <summary>Una modificación de especie debe conservar la validez de los movimientos ya aprendidos.</summary>

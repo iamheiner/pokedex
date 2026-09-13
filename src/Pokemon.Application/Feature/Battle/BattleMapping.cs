@@ -1,3 +1,5 @@
+using Pokemon.Domain.Battle.Exceptions;
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Domain;
 using Pokemon.Domain.Battle;
 using Pokemon.Domain.Pokedex.Repositories;
@@ -8,13 +10,13 @@ namespace Pokemon.Application.Feature.Battle;
 internal static class BattleMapping
 {
     /// <summary>Captura todos los datos dentro de una misma lectura coherente de la Pokédex.</summary>
-    public static async Task<BattlePokemon> SnapshotAsync(IPokedexReader data, Guid id, CancellationToken token)
+    public static async Task<BattlePokemon> SnapshotAsync(IReadRepositoryScope data, Guid id, CancellationToken token)
     {
-        var owned = await data.Pokemon.FindAsync(id, token)
+        var owned = await data.GetReader<IOwnedPokemonReader>().FindAsync(id, token)
             ?? throw new BattleNotFoundException("Referenced Pokemon was not found.");
-        var species = await data.Species.FindAsync(owned.SpeciesId, token) ?? throw new InvalidDataException("Pokemon species is missing.");
+        var species = await data.GetReader<ISpeciesReader>().FindAsync(owned.SpeciesId, token) ?? throw new InvalidDataException("Pokemon species is missing.");
         var stats = species.Stats;
-        var catalogMoves = (await data.Moves.FindManyAsync(owned.MoveIds, token)).ToDictionary(move => move.Id);
+        var catalogMoves = (await data.GetReader<IMoveReader>().FindManyAsync(owned.MoveIds, token)).ToDictionary(move => move.Id);
         var moves = owned.MoveIds.Select(moveId =>
         {
             var catalog = catalogMoves[moveId];

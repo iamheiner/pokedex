@@ -1,7 +1,5 @@
+using Pokemon.Domain.Pokedex.Exceptions;
 namespace Pokemon.Domain.Pokedex;
-
-/// <summary>Incumplimiento de una regla de la Pokédex; no representa un fallo técnico.</summary>
-public sealed class PokedexRuleException(string message) : Exception(message);
 
 internal static class PokedexGuard
 {

@@ -3,7 +3,7 @@ using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Infrastructure.Persistence.Repositories;
 
-internal sealed class SpeciesRepository(DatabaseSession session) : ISpeciesRepository
+internal sealed class SpeciesRepository(CatalogDatabaseSession session) : ISpeciesRepository, ISpeciesReader
 {
     private sealed record Row(Guid Id, string Name, int Type, int Health, int Attack, int Defense, int SpecialAttack, int SpecialDefense, int Speed);
     private sealed record LearningRow(Guid SpeciesId, Guid MoveId, int Level);

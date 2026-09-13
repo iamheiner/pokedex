@@ -1,3 +1,4 @@
+using Pokemon.Domain.Battle.Exceptions;
 using Pokemon.Tests.Persistence;
 using Pokemon.Domain;
 using Pokemon.Domain.Battle;
@@ -25,7 +26,9 @@ public sealed class BattleDomainTests
     }
 
     [Theory]
-    [InlineData(40, 80, false)] [InlineData(80, 40, true)] [InlineData(50, 50, true)]
+    [InlineData(40, 80, false)]
+    [InlineData(80, 40, true)]
+    [InlineData(50, 50, true)]
     public void SpeedSelectsFirstActorAndRequestOrderBreaksTie(int firstSpeed, int secondSpeed, bool firstStarts)
     {
         var first = Fighter(speed: firstSpeed); var second = Fighter(speed: secondSpeed);
@@ -84,7 +87,8 @@ public sealed class BattleDomainTests
         Assert.Empty(battle.Turns);
     }
     [Theory]
-    [InlineData(84)] [InlineData(101)]
+    [InlineData(84)]
+    [InlineData(101)]
     public void InvalidRandomFactorIsAnInternalFailure(int factor)
     {
         var battle = Duel();
@@ -102,7 +106,12 @@ public sealed class BattleDomainTests
         Assert.Throws<BattleRuleException>(() => BattleAggregate.Start(Guid.NewGuid(), battle.First, Fighter()));
     }
     [Theory]
-    [InlineData(1)] [InlineData(9)] [InlineData(10)] [InlineData(19)] [InlineData(100)] [InlineData(10000)]
+    [InlineData(1)]
+    [InlineData(9)]
+    [InlineData(10)]
+    [InlineData(19)]
+    [InlineData(100)]
+    [InlineData(10000)]
     public void MutualImmunityAlwaysEndsEvenForRoundingBoundaries(int health)
     {
         var battle = Duel(health, health);
@@ -127,7 +136,8 @@ public sealed class BattleDomainTests
         Assert.All(battle.Turns.Take(40), t => { Assert.Equal(0, t.AppliedDamage); Assert.Equal(1m, t.Effectiveness); });
     }
     [Theory]
-    [InlineData(1, 100, false)] [InlineData(100, 1, true)]
+    [InlineData(1, 100, false)]
+    [InlineData(100, 1, true)]
     public void StruggleCanLoseThroughRecoilOrWinThroughDamage(int firstHealth, int secondHealth, bool firstWins)
     {
         var battle = BattleAggregate.Start(Guid.NewGuid(), Fighter(health: firstHealth, type: PokemonType.Ghost), Fighter(health: secondHealth, type: PokemonType.Ghost));

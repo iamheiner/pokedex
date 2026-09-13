@@ -1,3 +1,4 @@
+using Pokemon.Domain.Battle.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Pokemon.Domain;

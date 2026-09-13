@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Domain.Pokedex.Repositories;
 using Pokemon.Infrastructure.Persistence;
@@ -36,7 +37,7 @@ public sealed class PersistenceArchitectureTests
     public void Repository_contracts_and_unit_of_work_belong_to_domain()
     {
         foreach (var contract in new[] { typeof(IBattleRepository), typeof(ISpeciesRepository), typeof(IMoveRepository),
-                     typeof(IOwnedPokemonRepository), typeof(IPokedexUnitOfWork) })
+                     typeof(IOwnedPokemonRepository), typeof(IUnitOfWork) })
         {
             Assert.True(contract.IsInterface);
             Assert.Equal("Pokemon.Domain", contract.Assembly.GetName().Name);
@@ -73,10 +74,10 @@ public sealed class PersistenceArchitectureTests
         foreach (var handler in handlers)
         {
             var dependencies = Assert.Single(handler.GetConstructors()).GetParameters().Select(parameter => parameter.ParameterType).ToArray();
-            Assert.Contains(typeof(IPokedexReadSession), dependencies);
-            Assert.DoesNotContain(dependencies, type => type == typeof(IPokedexUnitOfWork) || type.Name.EndsWith("Repository"));
+            Assert.Contains(typeof(IReadSession), dependencies);
+            Assert.DoesNotContain(dependencies, type => type == typeof(IUnitOfWork) || type.Name.EndsWith("Repository"));
         }
-        foreach (var reader in new[] { typeof(IMoveReader), typeof(ISpeciesReader), typeof(IOwnedPokemonReader), typeof(IPokedexReadSession) })
+        foreach (var reader in new[] { typeof(IMoveReader), typeof(ISpeciesReader), typeof(IOwnedPokemonReader), typeof(IReadSession) })
             Assert.DoesNotContain(reader.GetMethods(), method => method.Name.StartsWith("Save") || method.Name.StartsWith("Delete") || method.Name.StartsWith("Write"));
     }
 
@@ -98,7 +99,7 @@ public sealed class PersistenceArchitectureTests
     public void Battle_query_handler_does_not_receive_write_capabilities()
     {
         var handler = typeof(Pokemon.Application.Feature.Battle.Queries.GetBattle.GetBattleQueryHandler);
-        Assert.Equal(typeof(IBattleReader), Assert.Single(Assert.Single(handler.GetConstructors()).GetParameters()).ParameterType);
+        Assert.Equal(typeof(IReadSession), Assert.Single(Assert.Single(handler.GetConstructors()).GetParameters()).ParameterType);
         Assert.Single(typeof(IBattleReader).GetMethods());
     }
 
@@ -108,5 +109,23 @@ public sealed class PersistenceArchitectureTests
         var assembly = typeof(Pokemon.Application.Feature.Pokedex.Contracts.PokemonView).Assembly;
         foreach (var view in assembly.GetTypes().Where(type => type.Name.EndsWith("View")))
             Assert.DoesNotContain(view.GetProperties(), property => property.PropertyType.Name.EndsWith("Input"));
+    }
+    [Fact]
+    public void Unit_of_work_is_shared_and_has_no_aggregate_properties()
+    {
+        var units = typeof(IUnitOfWork).Assembly.GetTypes().Where(type => type.Name.EndsWith("UnitOfWork"));
+        Assert.Equal(typeof(IUnitOfWork), Assert.Single(units));
+        Assert.Equal("Pokemon.Domain.Common.Persistence", typeof(IUnitOfWork).Namespace);
+        Assert.Empty(typeof(IRepositoryScope).GetProperties());
+        Assert.False(typeof(IReadRepository).IsAssignableFrom(typeof(IMoveRepository)));
+        Assert.False(typeof(IReadRepository).IsAssignableFrom(typeof(IBattleRepository)));
+    }
+
+    [Fact]
+    public void Domain_exceptions_are_organized_in_exception_namespaces()
+    {
+        var exceptions = typeof(IUnitOfWork).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Exception)));
+        Assert.NotEmpty(exceptions);
+        Assert.All(exceptions, type => Assert.EndsWith(".Exceptions", type.Namespace));
     }
 }

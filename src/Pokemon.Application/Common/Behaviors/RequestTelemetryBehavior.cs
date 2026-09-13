@@ -1,3 +1,7 @@
+using Pokemon.Domain.Common.Exceptions;
+using Pokemon.Application.Feature.Pokedex.Exceptions;
+using Pokemon.Domain.Pokedex.Exceptions;
+using Pokemon.Domain.Battle.Exceptions;
 using Microsoft.Extensions.Logging;
 using Pokemon.Application.Feature.Battle;
 using Pokemon.Domain.Battle;
@@ -35,7 +39,7 @@ public sealed class RequestTelemetryBehavior<TRequest, TResponse>(ILogger<Reques
             outcome = "cancelled";
             throw;
         }
-        catch (Exception error) when (error is InvalidDamageRequestException or PokedexRuleException or PokedexNotFoundException or PokedexConflictException
+        catch (Exception error) when (error is InvalidDamageRequestException or PokedexRuleException or PokedexNotFoundException or PokedexConflictException or PersistenceConflictException
             or BattleRuleException or BattleNotFoundException or BattleConflictException)
         {
             outcome = "invalid";

@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using MediatR;
 using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
@@ -7,7 +8,7 @@ namespace Pokemon.Application.Feature.Pokedex.Queries.GetPossibleMoves;
 public sealed record GetPossibleMovesQuery(Guid Id) : IQuery<PossibleMovesView>;
 
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
-public sealed class GetPossibleMovesQueryHandler(IPokedexReadSession reader) : IRequestHandler<GetPossibleMovesQuery, PossibleMovesView>
+public sealed class GetPossibleMovesQueryHandler(IReadSession reader) : IRequestHandler<GetPossibleMovesQuery, PossibleMovesView>
 {
     public Task<PossibleMovesView> Handle(GetPossibleMovesQuery request, CancellationToken token) =>
         reader.ReadAsync<PossibleMovesView>(async data =>

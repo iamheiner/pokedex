@@ -2,7 +2,7 @@ using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Tests.Persistence;
 
-internal sealed class InMemorySpeciesRepository(Action ensure) : InMemoryRepository<Species>(value => value.Id, ensure), ISpeciesRepository
+internal sealed class InMemorySpeciesRepository(Action ensure) : InMemoryRepository<Species>(value => value.Id, ensure), ISpeciesRepository, ISpeciesReader
 {
     public Task<IReadOnlyList<Species>> ListAsync(CatalogPage page, CancellationToken token) => Result(Page(Entries.Values.OrderBy(value => value.Name, StringComparer.OrdinalIgnoreCase).ThenBy(value => value.Id), page), token);
     public Task<IReadOnlyList<Species>> FindManyAsync(IReadOnlyCollection<Guid> ids, CancellationToken token) => Result<IReadOnlyList<Species>>(Entries.Values.Where(value => ids.Contains(value.Id)).ToArray(), token);

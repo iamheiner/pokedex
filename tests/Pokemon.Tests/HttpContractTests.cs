@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Tests.Persistence;
 using System.Net;
 using System.Net.Http.Json;
@@ -209,13 +210,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", "");
         builder.ConfigureServices(services =>
         {
-            services.RemoveAll<Pokemon.Domain.Battle.Repositories.IBattleRepository>();
-            services.AddSingleton<Pokemon.Domain.Battle.Repositories.IBattleRepository, InMemoryBattleRepository>();
-            services.RemoveAll<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>();
-            services.AddSingleton<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork());
-            services.RemoveAll<Pokemon.Domain.Pokedex.Repositories.IPokedexReadSession>();
-            services.AddSingleton<Pokemon.Domain.Pokedex.Repositories.IPokedexReadSession>(provider =>
-                (Pokemon.Domain.Pokedex.Repositories.IPokedexReadSession)provider.GetRequiredService<Pokemon.Domain.Pokedex.Repositories.IPokedexUnitOfWork>());
+            services.RemoveAll<Pokemon.Domain.Common.Persistence.IUnitOfWork>();
+            services.AddSingleton<Pokemon.Domain.Common.Persistence.IUnitOfWork>(_ => new InMemoryUnitOfWork());
+            services.RemoveAll<Pokemon.Domain.Common.Persistence.IReadSession>();
+            services.AddSingleton<Pokemon.Domain.Common.Persistence.IReadSession>(provider =>
+                (Pokemon.Domain.Common.Persistence.IReadSession)provider.GetRequiredService<Pokemon.Domain.Common.Persistence.IUnitOfWork>());
             foreach (var descriptor in services.Where(d => d.ImplementationType == typeof(Pokemon.Infrastructure.PersistenceMigrationService)).ToArray())
                 services.Remove(descriptor);
             services.Configure<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckServiceOptions>(options => options.Registrations.Clear());

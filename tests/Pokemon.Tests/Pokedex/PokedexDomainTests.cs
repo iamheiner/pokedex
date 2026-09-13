@@ -1,3 +1,5 @@
+using Pokemon.Domain.Pokedex.Exceptions;
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Tests.Persistence;
 using Pokemon.Domain;
 using Pokemon.Domain.Pokedex;
@@ -57,25 +59,25 @@ public sealed class PokedexDomainTests
     [Fact]
     public async Task FailedAndCancelledTransactionsNeverPublishPartialChanges()
     {
-        using var store = new InMemoryPokedexUnitOfWork(false);
+        using var store = new InMemoryUnitOfWork(false);
         var move = new CatalogMove(Guid.NewGuid(), "Move", 40, PokemonType.Fire);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => store.WriteAsync<int>(async data => { await data.MoveRepository.SaveAsync(move, default); throw new InvalidOperationException(); }, default));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => store.WriteAsync<int>(async data => { await data.GetRepository<IMoveRepository>().SaveAsync(move, default); throw new InvalidOperationException(); }, default));
         using var cts = new CancellationTokenSource();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.WriteAsync(async data => { await data.MoveRepository.SaveAsync(move, default); cts.Cancel(); return 1; }, cts.Token));
-        Assert.Empty(await store.ReadAsync(async data => await data.Moves.ListAsync(new(), default), default));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.WriteAsync(async data => { await data.GetRepository<IMoveRepository>().SaveAsync(move, default); cts.Cancel(); return 1; }, cts.Token));
+        Assert.Empty(await store.ReadAsync(async data => await data.GetReader<IMoveReader>().ListAsync(new(), default), default));
         var called = false;
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.ReadAsync(async data => { called = true; return await data.Moves.ListAsync(new(), default); }, cts.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.ReadAsync(async data => { called = true; return await data.GetReader<IMoveReader>().ListAsync(new(), default); }, cts.Token));
         Assert.False(called);
     }
     [Fact]
     public async Task EscapedSessionAndReaderCannotMutatePublishedState()
     {
-        using var store = new InMemoryPokedexUnitOfWork(false);
-        IPokedexSession? escaped = null;
+        using var store = new InMemoryUnitOfWork(false);
+        IRepositoryScope? escaped = null;
         var move = new CatalogMove(Guid.NewGuid(), "Move", 40, PokemonType.Fire);
-        await store.WriteAsync(async data => { escaped = data; await data.MoveRepository.SaveAsync(move, default); return true; }, default);
-        await Assert.ThrowsAsync<ObjectDisposedException>(() => escaped!.MoveRepository.DeleteAsync(move.Id, default));
-        await store.ReadAsync(async data => { await ((IPokedexSession)data).MoveRepository.DeleteAsync(move.Id, default); return true; }, default);
-        Assert.Single(await store.ReadAsync(async data => await data.Moves.ListAsync(new(), default), default));
+        await store.WriteAsync(async data => { escaped = data; await data.GetRepository<IMoveRepository>().SaveAsync(move, default); return true; }, default);
+        await Assert.ThrowsAsync<ObjectDisposedException>(() => escaped!.GetRepository<IMoveRepository>().DeleteAsync(move.Id, default));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => store.ReadAsync(async data => { await ((IRepositoryScope)data).GetRepository<IMoveRepository>().DeleteAsync(move.Id, default); return true; }, default));
+        Assert.Single(await store.ReadAsync(async data => await data.GetReader<IMoveReader>().ListAsync(new(), default), default));
     }
 }

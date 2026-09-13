@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using MediatR;
 using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
@@ -7,7 +8,7 @@ namespace Pokemon.Application.Feature.Pokedex.Queries.GetPokemon;
 public sealed record GetPokemonQuery(Guid Id) : IQuery<PokemonView>;
 
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
-public sealed class GetPokemonQueryHandler(IPokedexReadSession reader) : IRequestHandler<GetPokemonQuery, PokemonView>
+public sealed class GetPokemonQueryHandler(IReadSession reader) : IRequestHandler<GetPokemonQuery, PokemonView>
 {
     public Task<PokemonView> Handle(GetPokemonQuery request, CancellationToken token) =>
         reader.ReadAsync<PokemonView>(async data =>

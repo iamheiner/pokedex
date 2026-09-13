@@ -1,3 +1,4 @@
+using Pokemon.Domain.Battle.Exceptions;
 using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Domain.Battle;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
@@ -7,7 +8,7 @@ namespace Pokemon.Tests.Persistence;
 /// Almacén de partidas de un proceso. El agregado es inmutable: solo se publica una nueva
 /// referencia si la acción termina correctamente. Las partidas se pierden al reiniciar.
 /// </summary>
-public sealed class InMemoryBattleRepository : IBattleRepository, IDisposable
+public sealed class InMemoryBattleRepository : IBattleRepository, IBattleReader, IDisposable
 {
     private readonly Dictionary<Guid, BattleAggregate> battles = [];
     private readonly SemaphoreSlim gate = new(1, 1);

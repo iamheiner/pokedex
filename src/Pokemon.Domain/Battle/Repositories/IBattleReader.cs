@@ -1,7 +1,8 @@
+using Pokemon.Domain.Common.Persistence;
 namespace Pokemon.Domain.Battle.Repositories;
 
 /// <summary>Recupera una partida sin conceder operaciones para crearla o ejecutar turnos.</summary>
-public interface IBattleReader
+public interface IBattleReader : IReadRepository
 {
     Task<Battle> Get(Guid id, CancellationToken token);
 }

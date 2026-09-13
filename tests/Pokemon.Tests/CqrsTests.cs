@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Tests.Persistence;
 using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Domain.Pokedex.Repositories;
@@ -78,10 +79,8 @@ public sealed class CqrsTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddApplication();
-        services.AddSingleton<IBattleRepository, InMemoryBattleRepository>();
-        services.AddSingleton<IBattleReader>(provider => provider.GetRequiredService<IBattleRepository>());
-        services.AddSingleton<IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork(seed: false));
-        services.AddSingleton<IPokedexReadSession>(provider => (IPokedexReadSession)provider.GetRequiredService<IPokedexUnitOfWork>());
+        services.AddSingleton<IUnitOfWork>(_ => new InMemoryUnitOfWork(seed: false));
+        services.AddSingleton<IReadSession>(provider => (IReadSession)provider.GetRequiredService<IUnitOfWork>());
         services.AddSingleton(random);
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
     }

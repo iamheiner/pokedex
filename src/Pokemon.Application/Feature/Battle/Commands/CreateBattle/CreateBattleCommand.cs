@@ -1,3 +1,5 @@
+using Pokemon.Domain.Battle.Exceptions;
+using Pokemon.Domain.Common.Persistence;
 using Pokemon.Application.Common.Messaging;
 using MediatR;
 using Pokemon.Domain.Battle;
@@ -10,7 +12,7 @@ namespace Pokemon.Application.Feature.Battle.Commands.CreateBattle;
 public sealed record CreateBattleCommand(CreateBattleInput Data) : ICommand<BattleView>;
 
 /// <summary>Crea una partida aislada a partir de dos ejemplares existentes, sin modificar la colección.</summary>
-public sealed class CreateBattleCommandHandler(IPokedexReadSession pokedex, IBattleRepository battles)
+public sealed class CreateBattleCommandHandler(IUnitOfWork transactions)
     : IRequestHandler<CreateBattleCommand, BattleView>
 {
     public async Task<BattleView> Handle(CreateBattleCommand request, CancellationToken token)
@@ -18,9 +20,13 @@ public sealed class CreateBattleCommandHandler(IPokedexReadSession pokedex, IBat
         var input = request.Data;
         if (input is null || input.FirstPokemonId == Guid.Empty || input.SecondPokemonId == Guid.Empty)
             throw new BattleRuleException("Two Pokemon identities are required.");
-        var battle = await pokedex.ReadAsync(async data => BattleAggregate.Start(Guid.NewGuid(),
-            await BattleMapping.SnapshotAsync(data, input.FirstPokemonId, token), await BattleMapping.SnapshotAsync(data, input.SecondPokemonId, token)), token);
-        await battles.Add(battle, token);
-        return BattleMapping.View(battle);
+        return await transactions.WriteAsync(async data =>
+        {
+            var battle = BattleAggregate.Start(Guid.NewGuid(),
+                await BattleMapping.SnapshotAsync(data, input.FirstPokemonId, token),
+                await BattleMapping.SnapshotAsync(data, input.SecondPokemonId, token));
+            await data.GetRepository<IBattleRepository>().Add(battle, token);
+            return BattleMapping.View(battle);
+        }, token);
     }
 }

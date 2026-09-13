@@ -1,3 +1,4 @@
+using Pokemon.Domain.Pokedex.Exceptions;
 using Pokemon.Domain.Pokedex;
 namespace Pokemon.Infrastructure.Persistence;
 

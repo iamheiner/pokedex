@@ -3,7 +3,7 @@ using Pokemon.Domain.Pokedex;
 using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Infrastructure.Persistence.Repositories;
 
-internal sealed class MoveRepository(DatabaseSession session) : IMoveRepository
+internal sealed class MoveRepository(CatalogDatabaseSession session) : IMoveRepository, IMoveReader
 {
     private const string Columns = "id AS Id, name AS Name, power AS Power, type AS Type";
     private sealed record Row(Guid Id, string Name, int Power, int Type)

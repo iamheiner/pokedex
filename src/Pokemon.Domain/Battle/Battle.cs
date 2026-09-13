@@ -1,3 +1,4 @@
+using Pokemon.Domain.Battle.Exceptions;
 namespace Pokemon.Domain.Battle;
 
 /// <summary>

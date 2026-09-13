@@ -1,3 +1,4 @@
+using Pokemon.Domain.Pokedex.Exceptions;
 namespace Pokemon.Domain.Pokedex.Repositories;
 
 /// <summary>Límite explícito de una consulta de catálogo; nunca representa una carga completa implícita.</summary>

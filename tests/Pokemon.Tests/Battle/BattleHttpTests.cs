@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
@@ -108,7 +109,8 @@ public sealed class BattleHttpTests
         Assert.Equal(1, untouched.Version); Assert.Equal(44, untouched.Second.CurrentHealth); Assert.All(untouched.First.Moves, m => Assert.Equal(5, m.RemainingUses));
     }
     [Theory]
-    [InlineData("firstPokemonId")] [InlineData("secondPokemonId")]
+    [InlineData("firstPokemonId")]
+    [InlineData("secondPokemonId")]
     public async Task CreationRequiresBothFields(string missing)
     {
         using var factory = new ApiFactory(); using var client = factory.CreateClient();
@@ -116,7 +118,9 @@ public sealed class BattleHttpTests
         await Problem(await client.PostAsJsonAsync("/battles", input), HttpStatusCode.BadRequest);
     }
     [Theory]
-    [InlineData("pokemonId")] [InlineData("moveId")] [InlineData("expectedVersion")]
+    [InlineData("pokemonId")]
+    [InlineData("moveId")]
+    [InlineData("expectedVersion")]
     public async Task TurnRequiresEveryFieldEvenNullableMoveId(string missing)
     {
         using var factory = new ApiFactory(); using var client = factory.CreateClient(); var battle = await Create(client);
@@ -175,7 +179,7 @@ public sealed class BattleHttpTests
         { services.RemoveAll<IDamageRandom>(); services.AddSingleton<IDamageRandom>(random); }));
         using var client = app.CreateClient();
         var aggregate = BattleDomainTests.Duel(1, 1);
-        await app.Services.GetRequiredService<IBattleRepository>().Add(aggregate, default);
+        await app.Services.GetRequiredService<IUnitOfWork>().WriteAsync(async scope => { await scope.GetRepository<IBattleRepository>().Add(aggregate, default); return true; }, default);
         var battle = (await client.GetFromJsonAsync<BattleView>($"/battles/{aggregate.Id}", Json))!;
         for (var turn = 0; turn < 40; turn++)
         {

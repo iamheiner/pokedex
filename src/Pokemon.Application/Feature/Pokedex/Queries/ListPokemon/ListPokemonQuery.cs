@@ -1,3 +1,4 @@
+using Pokemon.Domain.Common.Persistence;
 using MediatR;
 using Pokemon.Application.Common.Messaging;
 using Pokemon.Application.Feature.Pokedex.Contracts;
@@ -7,11 +8,11 @@ namespace Pokemon.Application.Feature.Pokedex.Queries.ListPokemon;
 public sealed record ListPokemonQuery(int Offset = 0, int Limit = 100) : IQuery<IReadOnlyList<PokemonView>>;
 
 /// <summary>Consulta con acceso exclusivamente de lectura; carga solo las identidades o página solicitadas.</summary>
-public sealed class ListPokemonQueryHandler(IPokedexReadSession reader) : IRequestHandler<ListPokemonQuery, IReadOnlyList<PokemonView>>
+public sealed class ListPokemonQueryHandler(IReadSession reader) : IRequestHandler<ListPokemonQuery, IReadOnlyList<PokemonView>>
 {
     public Task<IReadOnlyList<PokemonView>> Handle(ListPokemonQuery request, CancellationToken token) =>
         reader.ReadAsync<IReadOnlyList<PokemonView>>(async data =>
         {
-            return await PokedexMapping.ViewsAsync(data, await data.Pokemon.ListAsync(new CatalogPage(request.Offset, request.Limit), token), token);
+            return await PokedexMapping.ViewsAsync(data, await data.GetReader<IOwnedPokemonReader>().ListAsync(new CatalogPage(request.Offset, request.Limit), token), token);
         }, token);
 }

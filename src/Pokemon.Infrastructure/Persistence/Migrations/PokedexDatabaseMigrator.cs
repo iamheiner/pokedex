@@ -18,7 +18,7 @@ internal sealed class PokedexDatabaseMigrator(DatabaseConnectionFactory connecti
                 ?? throw new InvalidOperationException("Missing database migration.");
             using var reader = new StreamReader(stream);
             await session.ExecuteAsync(await reader.ReadToEndAsync(token), null, token);
-            await PokedexSeed.PopulateAsync(new PokedexSession(session), token);
+            await PokedexSeed.PopulateAsync(new RepositoryScope(session, RepositoryRegistry.CreateDefault(), readOnly: false), token);
             await session.ExecuteAsync("INSERT INTO pokedex_schema_migrations(version) VALUES(1)", null, token);
         }
         await session.CommitAsync(token);
