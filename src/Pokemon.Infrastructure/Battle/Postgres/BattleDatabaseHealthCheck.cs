@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Npgsql;
-namespace Pokemon.Api.Feature.Battle;
+namespace Pokemon.Infrastructure.Battle.Postgres;
 
 /// <summary>Disponibilidad real del almacén y del esquema para la sonda de readiness.</summary>
 internal sealed class BattleDatabaseHealthCheck(NpgsqlDataSource source) : IHealthCheck

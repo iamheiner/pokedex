@@ -1,8 +1,9 @@
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
-namespace Pokemon.Application.Feature.Battle.Persistence;
+namespace Pokemon.Domain.Battle.Repositories;
 
-/// <summary>Puerto de partidas: la actualización de una acción debe ser atómica y conservar su versión.</summary>
-public interface IBattleStore
+/// <summary>Repositorio del agregado Battle. Las implementaciones deben actualizar el agregado completo
+/// atómicamente: una acción fallida no publica cambios y una versión obsoleta no consume azar.</summary>
+public interface IBattleRepository
 {
     Task Add(BattleAggregate battle, CancellationToken token);
     Task<BattleAggregate> Get(Guid id, CancellationToken token);

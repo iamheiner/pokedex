@@ -204,7 +204,7 @@
         "type": "Project",
         "dependencies": {
           "Npgsql": "[10.0.3, )",
-          "Pokemon.Application": "[1.0.0, )"
+          "Pokemon.Domain": "[1.0.0, )"
         }
       }
     }

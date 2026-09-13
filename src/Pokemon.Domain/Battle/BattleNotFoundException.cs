@@ -1,2 +1,2 @@
-namespace Pokemon.Application.Feature.Battle;
+namespace Pokemon.Domain.Battle;
 public sealed class BattleNotFoundException(string message) : Exception(message);

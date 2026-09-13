@@ -1,6 +1,6 @@
 using Pokemon.Domain;
 using Pokemon.Domain.Battle;
-using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Domain.Pokedex.Repositories;
 using Pokemon.Application.Feature.Battle.Contracts;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
 namespace Pokemon.Application.Feature.Battle;

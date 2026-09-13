@@ -59,7 +59,7 @@ La comprobación de CRUD sobre una API real está en `scripts/verify-pokedex.ps1
 
 Cada caso de uso tiene su Command o Query y su handler bajo Application/Feature/Pokedex. La API solo adapta HTTP y envía a MediatR. Las proyecciones de salida se separan de los agregados y los contratos de entrada.
 
-IPokedexStore es el puerto de Application: Read ofrece una lectura coherente, Write agrupa comprobaciones y cambios en una transacción. Infrastructure implementa el puerto con memoria, copia del estado y un semáforo por almacén. Las entidades son inmutables; las colecciones del dominio son copias de solo lectura. Si un comando falla o se cancela antes de publicar, no se conserva ninguna modificación. Comprobación de unicidad y escritura se ejecutan juntas, incluso bajo peticiones concurrentes.
+IPokedexUnitOfWork es el contrato de unidad de trabajo de Domain/Pokedex/Repositories: Read ofrece una lectura coherente, Write agrupa comprobaciones y cambios en una transacción. Infrastructure implementa el puerto con memoria, copia del estado y un semáforo por almacén. Las entidades son inmutables; las colecciones del dominio son copias de solo lectura. Si un comando falla o se cancela antes de publicar, no se conserva ninguna modificación. Comprobación de unicidad y escritura se ejecutan juntas, incluso bajo peticiones concurrentes.
 
 Esta implementación está pensada para un catálogo pequeño en un único proceso. **Los cambios se pierden al reiniciar la API** y cada réplica tendría su propio estado. Los PUT concurrentes se serializan: la última escritura válida prevalece, sin control de versión del cliente. Las listas devuelven todo el catálogo con orden estable; no se implementa paginación para este alcance.
 

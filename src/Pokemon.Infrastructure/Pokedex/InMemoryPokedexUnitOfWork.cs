@@ -1,4 +1,4 @@
-using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Domain.Pokedex.Repositories;
 using Pokemon.Domain.Pokedex;
 namespace Pokemon.Infrastructure.Pokedex;
 
@@ -7,12 +7,12 @@ namespace Pokemon.Infrastructure.Pokedex;
 /// Trabaja en una copia y solo la publica al terminar; una excepción revierte todo el comando.
 /// No persiste entre reinicios ni sirve como almacenamiento compartido entre réplicas.
 /// </summary>
-public sealed class InMemoryPokedexStore : IPokedexStore, IDisposable
+public sealed class InMemoryPokedexUnitOfWork : IPokedexUnitOfWork, IDisposable
 {
     private readonly SemaphoreSlim gate = new(1, 1);
     private Snapshot state = new();
 
-    public InMemoryPokedexStore(bool seed = true)
+    public InMemoryPokedexUnitOfWork(bool seed = true)
     {
         if (seed) PokedexSeed.Populate(state);
     }
@@ -43,24 +43,18 @@ public sealed class InMemoryPokedexStore : IPokedexStore, IDisposable
 
     private sealed class Snapshot : IPokedexSession
     {
-        private readonly Dictionary<Guid, Species> species = [];
-        private readonly Dictionary<Guid, CatalogMove> moves = [];
-        private readonly Dictionary<Guid, OwnedPokemon> pokemon = [];
-        public IReadOnlyCollection<Species> Species => species.Values.ToArray();
-        public IReadOnlyCollection<CatalogMove> Moves => moves.Values.ToArray();
-        public IReadOnlyCollection<OwnedPokemon> Pokemon => pokemon.Values.ToArray();
-        public void Save(Species value) => species[value.Id] = value;
-        public void Save(CatalogMove value) => moves[value.Id] = value;
-        public void Save(OwnedPokemon value) => pokemon[value.Id] = value;
-        public void DeleteSpecies(Guid id) => species.Remove(id);
-        public void DeleteMove(Guid id) => moves.Remove(id);
-        public void DeletePokemon(Guid id) => pokemon.Remove(id);
+        public ISpeciesRepository SpeciesRepository { get; } = new InMemorySpeciesRepository();
+        public IMoveRepository MoveRepository { get; } = new InMemoryMoveRepository();
+        public IOwnedPokemonRepository PokemonRepository { get; } = new InMemoryOwnedPokemonRepository();
+        public IReadOnlyCollection<Species> Species => SpeciesRepository.List();
+        public IReadOnlyCollection<CatalogMove> Moves => MoveRepository.List();
+        public IReadOnlyCollection<OwnedPokemon> Pokemon => PokemonRepository.List();
         public Snapshot Copy()
         {
             var copy = new Snapshot();
-            foreach (var value in species.Values) copy.Save(value);
-            foreach (var value in moves.Values) copy.Save(value);
-            foreach (var value in pokemon.Values) copy.Save(value);
+            foreach (var value in Species) copy.SpeciesRepository.Save(value);
+            foreach (var value in Moves) copy.MoveRepository.Save(value);
+            foreach (var value in Pokemon) copy.PokemonRepository.Save(value);
             return copy;
         }
     }

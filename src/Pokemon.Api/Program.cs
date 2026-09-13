@@ -1,8 +1,7 @@
 using Pokemon.Api.Feature.Authentication;
 using Pokemon.Api.Feature.Battle;
 using Pokemon.Domain.Battle;
-using Pokemon.Application.Feature.Pokedex.Persistence;
-using Pokemon.Infrastructure.Pokedex;
+using Pokemon.Infrastructure;
 using Pokemon.Api.Feature.Pokedex.Moves;
 using Pokemon.Api.Feature.Pokedex.Species;
 using Pokemon.Api.Feature.Pokedex.Pokemon;
@@ -27,8 +26,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddApplication();
-builder.Services.AddBattlePersistence(builder.Configuration);
-builder.Services.AddSingleton<IPokedexStore>(_ => new InMemoryPokedexStore());
+builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddDamageFeature();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>

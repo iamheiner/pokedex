@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pokemon.Application.Feature.Battle.Contracts;
 using Pokemon.Application.Feature.Damage;
-using Pokemon.Application.Feature.Battle.Persistence;
+using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Domain.Battle;
 namespace Pokemon.Tests.Battle;
 
@@ -175,7 +175,7 @@ public sealed class BattleHttpTests
         { services.RemoveAll<IDamageRandom>(); services.AddSingleton<IDamageRandom>(random); }));
         using var client = app.CreateClient();
         var aggregate = BattleDomainTests.Duel(1, 1);
-        await app.Services.GetRequiredService<IBattleStore>().Add(aggregate, default);
+        await app.Services.GetRequiredService<IBattleRepository>().Add(aggregate, default);
         var battle = (await client.GetFromJsonAsync<BattleView>($"/battles/{aggregate.Id}", Json))!;
         for (var turn = 0; turn < 40; turn++)
         {

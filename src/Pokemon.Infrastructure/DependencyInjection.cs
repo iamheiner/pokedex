@@ -1,19 +1,30 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Pokemon.Domain.Pokedex.Repositories;
+using Pokemon.Infrastructure.Pokedex;
 using Npgsql;
-using Pokemon.Application.Feature.Battle.Persistence;
+using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Infrastructure.Battle;
 using Pokemon.Infrastructure.Battle.Postgres;
-namespace Pokemon.Api.Feature.Battle;
+namespace Pokemon.Infrastructure;
 
 /// <summary>Composición del adaptador. PostgreSQL es el modo normal; memoria requiere selección explícita.</summary>
-public static class BattlePersistence
+public static class DependencyInjection
 {
-    public static void AddBattlePersistence(this IServiceCollection services, IConfiguration configuration)
+    public static void AddPersistence(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork());
+        services.AddBattlePersistence(configuration);
+    }
+
+    private static void AddBattlePersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHealthChecks();
         var provider = configuration["BattlePersistence:Provider"] ?? "Postgres";
         if (string.Equals(provider, "Memory", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddSingleton<IBattleStore, InMemoryBattleStore>();
+            services.AddSingleton<IBattleRepository, InMemoryBattleRepository>();
             return;
         }
         if (!string.Equals(provider, "Postgres", StringComparison.OrdinalIgnoreCase))
@@ -22,7 +33,7 @@ public static class BattlePersistence
         if (string.IsNullOrWhiteSpace(connection))
             throw new InvalidOperationException("ConnectionStrings:Battles is required for PostgreSQL. Use Docker Compose or configure the connection explicitly.");
         services.AddSingleton(_ => NpgsqlDataSource.Create(connection));
-        services.AddSingleton<IBattleStore, PostgresBattleStore>();
+        services.AddSingleton<IBattleRepository, PostgresBattleRepository>();
         services.AddSingleton<BattleDatabaseMigrator>();
         services.AddHostedService<BattleMigrationService>();
         services.AddHealthChecks().AddCheck<BattleDatabaseHealthCheck>("postgres-battles");

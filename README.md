@@ -120,3 +120,5 @@ El repositorio sigue [Git Flow](docs/git-flow.md), con ramas de entrega e integr
 Los recorridos HTTP reproducibles están en `scripts/verify-pokedex.ps1` y `scripts/verify-battle.ps1`; admiten `-BaseUrl` para usar el puerto elegido.
 
 La suite PostgreSQL se ejecuta con `docker compose run --build --rm postgres-tests`. El script `scripts/verify-battle-persistence.ps1` comprueba la recuperación tras recrear PostgreSQL y reiniciar la API. `docker compose down` conserva las partidas; `docker compose down -v` elimina sus datos.
+
+La separación de capas y las garantías de persistencia están explicadas en [repositorios y unidad de trabajo](docs/repositorios.md).

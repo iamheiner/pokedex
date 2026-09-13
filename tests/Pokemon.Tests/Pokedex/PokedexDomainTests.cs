@@ -1,7 +1,7 @@
 using Pokemon.Domain;
 using Pokemon.Domain.Pokedex;
 using Pokemon.Infrastructure.Pokedex;
-using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Tests.Pokedex;
 
 public sealed class PokedexDomainTests
@@ -52,11 +52,11 @@ public sealed class PokedexDomainTests
     [Fact]
     public async Task FailedAndCancelledTransactionsNeverPublishPartialChanges()
     {
-        using var store = new InMemoryPokedexStore(false);
+        using var store = new InMemoryPokedexUnitOfWork(false);
         var move = new CatalogMove(Guid.NewGuid(), "Move", 40, PokemonType.Fire);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => store.Write<int>(data => { data.Save(move); throw new InvalidOperationException(); }, default));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => store.Write<int>(data => { data.MoveRepository.Save(move); throw new InvalidOperationException(); }, default));
         using var cts = new CancellationTokenSource();
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.Write(data => { data.Save(move); cts.Cancel(); return 1; }, cts.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.Write(data => { data.MoveRepository.Save(move); cts.Cancel(); return 1; }, cts.Token));
         Assert.Empty(await store.Read(data => data.Moves, default));
         var called = false;
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.Read(data => { called = true; return data.Moves; }, cts.Token));
@@ -65,12 +65,12 @@ public sealed class PokedexDomainTests
     [Fact]
     public async Task EscapedSessionAndReaderCannotMutatePublishedState()
     {
-        using var store = new InMemoryPokedexStore(false);
+        using var store = new InMemoryPokedexUnitOfWork(false);
         IPokedexSession? escaped = null;
         var move = new CatalogMove(Guid.NewGuid(), "Move", 40, PokemonType.Fire);
-        await store.Write(data => { escaped = data; data.Save(move); return true; }, default);
-        escaped!.DeleteMove(move.Id);
-        await store.Read(data => { ((IPokedexSession)data).DeleteMove(move.Id); return true; }, default);
+        await store.Write(data => { escaped = data; data.MoveRepository.Save(move); return true; }, default);
+        escaped!.MoveRepository.Delete(move.Id);
+        await store.Read(data => { ((IPokedexSession)data).MoveRepository.Delete(move.Id); return true; }, default);
         Assert.Single(await store.Read(data => data.Moves, default));
     }
 }

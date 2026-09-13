@@ -148,7 +148,7 @@ public sealed class BattleDomainTests
     [Fact]
     public async Task StoreRollsBackExceptionsCancellationAndInvalidVersionAdvances()
     {
-        using var store = new InMemoryBattleStore(); var battle = Duel(); await store.Add(battle, default);
+        using var store = new InMemoryBattleRepository(); var battle = Duel(); await store.Add(battle, default);
         await Assert.ThrowsAsync<InvalidOperationException>(() => store.Update(battle.Id, b => throw new InvalidOperationException(), default));
         using var cts = new CancellationTokenSource();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.Update(battle.Id, b => { var next = Next(b); cts.Cancel(); return next; }, cts.Token));

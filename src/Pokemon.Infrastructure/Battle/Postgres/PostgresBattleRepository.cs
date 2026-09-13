@@ -1,7 +1,6 @@
 using Npgsql;
 using NpgsqlTypes;
-using Pokemon.Application.Feature.Battle;
-using Pokemon.Application.Feature.Battle.Persistence;
+using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Domain.Battle;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
 namespace Pokemon.Infrastructure.Battle.Postgres;
@@ -10,7 +9,7 @@ namespace Pokemon.Infrastructure.Battle.Postgres;
 /// Guarda un agregado por fila. SELECT FOR UPDATE serializa únicamente las acciones de
 /// la misma partida, también entre procesos. El turno y su historial se confirman juntos.
 /// </summary>
-public sealed class PostgresBattleStore(NpgsqlDataSource source) : IBattleStore
+public sealed class PostgresBattleRepository(NpgsqlDataSource source) : IBattleRepository
 {
     public async Task Add(BattleAggregate battle, CancellationToken token)
     {

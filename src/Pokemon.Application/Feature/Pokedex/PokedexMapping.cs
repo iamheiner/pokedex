@@ -1,6 +1,6 @@
 using Pokemon.Domain.Pokedex;
 using Pokemon.Application.Feature.Pokedex.Contracts;
-using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Domain.Pokedex.Repositories;
 namespace Pokemon.Application.Feature.Pokedex;
 
 internal static class PokedexMapping

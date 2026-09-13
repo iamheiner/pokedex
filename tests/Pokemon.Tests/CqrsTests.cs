@@ -1,6 +1,6 @@
-using Pokemon.Application.Feature.Battle.Persistence;
+using Pokemon.Domain.Battle.Repositories;
 using Pokemon.Infrastructure.Battle;
-using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Domain.Pokedex.Repositories;
 using Pokemon.Infrastructure.Pokedex;
 using Pokemon.Application.Common.Exceptions;
 using System.Diagnostics;
@@ -78,8 +78,8 @@ public sealed class CqrsTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddApplication();
-        services.AddSingleton<IBattleStore, InMemoryBattleStore>();
-        services.AddSingleton<IPokedexStore>(_ => new InMemoryPokedexStore(seed: false));
+        services.AddSingleton<IBattleRepository, InMemoryBattleRepository>();
+        services.AddSingleton<IPokedexUnitOfWork>(_ => new InMemoryPokedexUnitOfWork(seed: false));
         services.AddSingleton(random);
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestTelemetryBehavior<,>));
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });

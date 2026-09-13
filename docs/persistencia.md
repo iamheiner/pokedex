@@ -32,7 +32,7 @@ El ejemplo usa la credencial local predeterminada; si se cambia, la conexión de
 
 ## Modelo almacenado y DDD
 
-El dominio no depende de Npgsql, SQL ni serialización. PostgresBattleStore implementa el puerto IBattleStore en Infrastructure. Se utiliza SQL parametrizado con Npgsql 10.0.3; no se añade un ORM para este único agregado.
+El dominio no depende de Npgsql, SQL ni serialización. PostgresBattleRepository implementa el puerto IBattleRepository en Infrastructure. Se utiliza SQL parametrizado con Npgsql 10.0.3; no se añade un ORM para este único agregado.
 
 La tabla `battles` tiene clave primaria UUID, versión positiva, documento JSONB y fechas de creación/actualización con zona horaria. Las restricciones verifican identidad, versión y formato del documento. La clave primaria cubre las consultas por identidad; no se añaden índices JSON que no necesita el acceso actual.
 

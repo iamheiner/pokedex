@@ -1,15 +1,15 @@
 using MediatR;
 using Pokemon.Domain.Battle;
 using Pokemon.Application.Feature.Battle.Contracts;
-using Pokemon.Application.Feature.Battle.Persistence;
-using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Domain.Battle.Repositories;
+using Pokemon.Domain.Pokedex.Repositories;
 using BattleAggregate = Pokemon.Domain.Battle.Battle;
 namespace Pokemon.Application.Feature.Battle.Commands.CreateBattle;
 
 public sealed record CreateBattleCommand(CreateBattleInput Data) : IRequest<BattleView>;
 
 /// <summary>Crea una partida aislada a partir de dos ejemplares existentes, sin modificar la colección.</summary>
-public sealed class CreateBattleCommandHandler(IPokedexStore pokedex, IBattleStore battles)
+public sealed class CreateBattleCommandHandler(IPokedexUnitOfWork pokedex, IBattleRepository battles)
     : IRequestHandler<CreateBattleCommand, BattleView>
 {
     public async Task<BattleView> Handle(CreateBattleCommand request, CancellationToken token)
