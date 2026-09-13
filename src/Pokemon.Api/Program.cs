@@ -1,3 +1,8 @@
+using Pokemon.Application.Feature.Pokedex.Persistence;
+using Pokemon.Infrastructure.Pokedex;
+using Pokemon.Api.Feature.Pokedex.Moves;
+using Pokemon.Api.Feature.Pokedex.Species;
+using Pokemon.Api.Feature.Pokedex.Pokemon;
 using System.Diagnostics;
 using Pokemon.Api.Errors;
 using Scalar.AspNetCore;
@@ -19,6 +24,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddApplication();
+builder.Services.AddSingleton<IPokedexStore>(_ => new InMemoryPokedexStore());
 builder.Services.AddDamageFeature();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
@@ -37,6 +43,9 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("ApiDocu
 }
 app.MapHealthEndpoints();
 app.MapDamageEndpoints();
+app.MapMovesEndpoints();
+app.MapSpeciesEndpoints();
+app.MapPokemonEndpoints();
 app.Run();
 
 // Hace accesible el punto de entrada al host HTTP de las pruebas de integración.

@@ -1,3 +1,5 @@
+using Pokemon.Application.Feature.Pokedex;
+using Pokemon.Domain.Pokedex;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Pokemon.Application.Common.Exceptions;
@@ -11,7 +13,9 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExce
     {
         var status = exception switch
         {
-            InvalidDamageRequestException => StatusCodes.Status400BadRequest,
+            InvalidDamageRequestException or PokedexRuleException => StatusCodes.Status400BadRequest,
+            PokedexNotFoundException => StatusCodes.Status404NotFound,
+            PokedexConflictException => StatusCodes.Status409Conflict,
             BadHttpRequestException badRequest => badRequest.StatusCode,
             _ => StatusCodes.Status500InternalServerError
         };
@@ -23,10 +27,11 @@ public sealed class ApiExceptionHandler(IProblemDetailsService problems) : IExce
             ProblemDetails = new ProblemDetails
             {
                 Status = status,
-                Title = status == 400 ? "Invalid damage request" : status == 415 ? "Unsupported media type" : "Request failed",
+                Title = status switch { 400 => "Invalid request", 404 => "Resource not found", 409 => "Resource conflict", 415 => "Unsupported media type", _ => "Request failed" },
                 Detail = exception switch
                 {
                     InvalidDamageRequestException validation => validation.Message,
+                    PokedexRuleException or PokedexNotFoundException or PokedexConflictException => exception.Message,
                     BadHttpRequestException => "Send valid application/json with all required fields and supported type names.",
                     _ => "An unexpected error occurred. Use the traceId to locate the failure."
                 }

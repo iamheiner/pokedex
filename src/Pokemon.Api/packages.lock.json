@@ -111,6 +111,12 @@
       },
       "pokemon.domain": {
         "type": "Project"
+      },
+      "pokemon.infrastructure": {
+        "type": "Project",
+        "dependencies": {
+          "Pokemon.Application": "[1.0.0, )"
+        }
       }
     }
   }

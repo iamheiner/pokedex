@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pokemon.Application\Pokemon.Application.csproj" />
+    <ProjectReference Include="../Pokemon.Infrastructure/Pokemon.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

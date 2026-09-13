@@ -3,6 +3,7 @@
     <Project Path="src/Pokemon.Api/Pokemon.Api.csproj" />
     <Project Path="src/Pokemon.Application/Pokemon.Application.csproj" />
     <Project Path="src/Pokemon.Domain/Pokemon.Domain.csproj" />
+    <Project Path="src/Pokemon.Infrastructure/Pokemon.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Pokemon.Tests/Pokemon.Tests.csproj" />
