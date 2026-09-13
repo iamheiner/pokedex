@@ -12,7 +12,7 @@ El backend reúne los tres ejercicios en una solución y un arranque Docker. Sca
 
 Para revisar la entrega:
 
-1. Ejecutar `docker compose up --build -d` siguiendo los puertos del README. La construcción ejecuta las pruebas antes de publicar la API.
+1. Ejecutar `docker compose up --build -d` siguiendo los puertos del README. La construcción publica la API; las pruebas se ejecutan por separado con los comandos del README.
 2. Abrir Scalar y probar uno de los seis ejemplos de Damage.
 3. Consultar la Pokédex: distinguir los cuatro movimientos aprendidos del plan completo con niveles futuros. El catálogo inicial contiene cinco especies, cinco ejemplares y 21 movimientos.
 4. Ejecutar el script de Pokédex para recorrer sus operaciones con datos temporales.
@@ -23,6 +23,6 @@ Partidas y Pokédex usan PostgreSQL para conservar todos los datos tras reinicia
 
 Para la entrevista, conviene poder explicar por qué un movimiento del catálogo tiene identidad mientras Move del cálculo es un objeto valor; por qué aprendizaje no equivale a coincidir en tipo; por qué la partida usa snapshots; cómo se evitan dos ataques concurrentes; y cómo se termina un combate con inmunidades. Las decisiones de simplificación son parte de la solución y están descritas en los documentos de cada ejercicio.
 
-El desarrollo sigue Git Flow. main conserva la entrega inicial y develop la integración de Pokédex. La rama refactor/solid-cqrs-dapper reúne la continuación de combate, Keycloak, persistencia PostgreSQL y esta revisión arquitectónica. Su integración en develop y la release final siguen pendientes; no se ha publicado en un remoto ni ejecutado el workflow de GitHub allí.
+Los tres ejercicios están integrados en main y develop. Las ramas de funcionalidad conservan las etapas del desarrollo. El resultado de la verificación local se recoge en el README; el del workflow debe consultarse en GitHub Actions.
 
-La suite conjunta contiene 601 pruebas sin base de datos superadas en Windows y Docker Linux, más 20 pruebas superadas contra PostgreSQL real. Los recorridos HTTP de Pokédex y combate se han ejecutado contra sus imágenes. El detalle de los escenarios y límites de cada verificación está en los documentos de cada ejercicio.
+El README recoge los comandos para ejecutar las pruebas sin base de datos, la integración con PostgreSQL y los recorridos HTTP. Los documentos de cada ejercicio detallan sus escenarios; las cifras de verificaciones iniciales son resultados históricos.
